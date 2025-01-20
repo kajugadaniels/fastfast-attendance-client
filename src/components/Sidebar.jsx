@@ -1,5 +1,5 @@
 import React from 'react'
-import { House } from 'lucide-react'
+import { House, UsersRound } from 'lucide-react'
 
 const Sidebar = () => {
     return (
@@ -17,6 +17,16 @@ const Sidebar = () => {
                         </div>
                         <div className="side-menu__title">
                             Dashboard
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="/employees" className="side-menu">
+                        <div className="side-menu__icon">
+                            <UsersRound className="stroke-1.5 w-5 h-5" />
+                        </div>
+                        <div className="side-menu__title">
+                            Employees
                         </div>
                     </a>
                 </li>

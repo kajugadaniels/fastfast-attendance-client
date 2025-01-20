@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChartBar, CircleX, House } from 'lucide-react';
+import { ChartBar, CircleX, House, UsersRound } from 'lucide-react';
 
 const MobileMenu = () => {
     return (
@@ -24,6 +24,16 @@ const MobileMenu = () => {
                             </div>
                             <div className="menu__title">
                                 Dashboard
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a className="menu" href="/employees">
+                            <div className="menu__icon">
+                                <UsersRound className="stroke-1.5 w-5 h-5" />
+                            </div>
+                            <div className="menu__title">
+                                Employees
                             </div>
                         </a>
                     </li>
