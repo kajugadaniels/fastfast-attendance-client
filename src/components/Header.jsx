@@ -1,12 +1,27 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { ToggleRight, UserCircle } from 'lucide-react'
 
 const Header = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false)
+    const dropdownRef = useRef(null)
 
     const handleToggleDropdown = () => {
         setDropdownOpen((prev) => !prev)
     }
+
+    // Close dropdown if click is detected outside of it
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [])
 
     return (
         <div className="relative z-[51] flex h-[67px] items-center border-b border-slate-200">
@@ -17,9 +32,10 @@ const Header = () => {
                     </li>
                 </ol>
             </nav>
-            <div className="dropdown relative">
+            {/* Attach ref to the dropdown wrapper */}
+            <div className="dropdown relative" ref={dropdownRef}>
                 <button
-                    aria-expanded={dropdownOpen ? "true" : "false"}
+                    aria-expanded={dropdownOpen ? 'true' : 'false'}
                     className="cursor-pointer image-fit zoom-in intro-x block h-8 w-8 overflow-hidden rounded-full shadow-lg"
                     onClick={handleToggleDropdown}
                 >
@@ -31,8 +47,8 @@ const Header = () => {
                 <div
                     className={
                         dropdownOpen
-                            ? "absolute z-30 top-[100%] right-0"
-                            : "dropdown-menu z-[9999] hidden absolute invisible opacity-0 translate-y-1"
+                            ? 'absolute z-30 top-[100%] right-0'
+                            : 'dropdown-menu z-[9999] hidden absolute invisible opacity-0 translate-y-1'
                     }
                 >
                     <div className="dropdown-content rounded-md border-transparent p-2 shadow-[0px_3px_10px_#00000017] dark:border-transparent dark:bg-darkmode-600 mt-px w-56 bg-theme-1 text-white">
