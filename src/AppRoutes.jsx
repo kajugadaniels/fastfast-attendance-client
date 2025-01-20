@@ -2,6 +2,7 @@ import React from 'react'
 import {  } from './pages'
 import { Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
+import { Dashboard } from './pages'
 
 const AppRoutes = () => {
     return (
