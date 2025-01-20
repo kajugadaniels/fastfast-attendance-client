@@ -1,34 +1,52 @@
 import React from 'react'
 import { House, UsersRound } from 'lucide-react'
+import { useLocation, NavLink } from 'react-router-dom'
 
 const Sidebar = () => {
+    const { pathname } = useLocation()
+
+    // Check active state for each sidebar item.
+    const isDashboardActive = pathname === '/dashboard'
+    const isEmployeesActive =
+        pathname.startsWith('/employees') || pathname.startsWith('/employee')
+
     return (
         <nav className="side-nav hidden w-[80px] overflow-x-hidden pb-16 pr-5 md:block xl:w-[230px]">
-            <a className="flex items-center pt-4 pl-5 intro-x" href="/dashboard">
-                <img className="w-6" src="https://midone-html.left4code.com/dist/images/logo.svg" alt="" />
-                <span className="hidden ml-3 text-lg text-white xl:block"> CAPS </span>
-            </a>
+            <NavLink className="flex items-center pt-4 pl-5 intro-x" to="/dashboard">
+                <img
+                    className="w-6"
+                    src="https://midone-html.left4code.com/dist/images/logo.svg"
+                    alt="Logo"
+                />
+                <span className="hidden ml-3 text-lg text-white xl:block">CAPS</span>
+            </NavLink>
             <div className="my-6 side-nav__divider"></div>
             <ul>
                 <li>
-                    <a href="/dashboard" className="side-menu side-menu--active">
+                    <NavLink
+                        to="/dashboard"
+                        className={() =>
+                            `side-menu ${isDashboardActive ? 'side-menu--active' : ''}`
+                        }
+                    >
                         <div className="side-menu__icon">
                             <House className="stroke-1.5 w-5 h-5" />
                         </div>
-                        <div className="side-menu__title">
-                            Dashboard
-                        </div>
-                    </a>
+                        <div className="side-menu__title">Dashboard</div>
+                    </NavLink>
                 </li>
                 <li>
-                    <a href="/employees" className="side-menu">
+                    <NavLink
+                        to="/employees"
+                        className={() =>
+                            `side-menu ${isEmployeesActive ? 'side-menu--active' : ''}`
+                        }
+                    >
                         <div className="side-menu__icon">
                             <UsersRound className="stroke-1.5 w-5 h-5" />
                         </div>
-                        <div className="side-menu__title">
-                            Employees
-                        </div>
-                    </a>
+                        <div className="side-menu__title">Employees</div>
+                    </NavLink>
                 </li>
             </ul>
         </nav>
