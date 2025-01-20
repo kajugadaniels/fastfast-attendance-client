@@ -1,7 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ToggleRight, UserCircle } from 'lucide-react'
 
 const Header = () => {
+    const [dropdownOpen, setDropdownOpen] = useState(false)
+
+    const handleToggleDropdown = () => {
+        setDropdownOpen((prev) => !prev)
+    }
+
     return (
         <div className="relative z-[51] flex h-[67px] items-center border-b border-slate-200">
             <nav aria-label="breadcrumb" className="flex -intro-x mr-auto hidden sm:flex">
@@ -11,11 +17,24 @@ const Header = () => {
                     </li>
                 </ol>
             </nav>
-            <div data-tw-placement="bottom-end" className="dropdown relative">
-                <button data-tw-toggle="dropdown" aria-expanded="false" className="cursor-pointer image-fit zoom-in intro-x block h-8 w-8 overflow-hidden rounded-full shadow-lg">
-                    <img src="https://midone-html.left4code.com/dist/images/fakers/profile-6.jpg" alt="" />
+            <div className="dropdown relative">
+                <button
+                    aria-expanded={dropdownOpen ? "true" : "false"}
+                    className="cursor-pointer image-fit zoom-in intro-x block h-8 w-8 overflow-hidden rounded-full shadow-lg"
+                    onClick={handleToggleDropdown}
+                >
+                    <img
+                        src="https://midone-html.left4code.com/dist/images/fakers/profile-6.jpg"
+                        alt=""
+                    />
                 </button>
-                <div data-transition="" data-selector=".show" data-enter="transition-all ease-linear duration-150" data-enter-from="absolute !mt-5 invisible opacity-0 translate-y-1" data-enter-to="!mt-1 visible opacity-100 translate-y-0" data-leave="transition-all ease-linear duration-150" data-leave-from="!mt-1 visible opacity-100 translate-y-0" data-leave-to="absolute !mt-5 invisible opacity-0 translate-y-1" className="dropdown-menu absolute z-[9999] hidden">
+                <div
+                    className={
+                        dropdownOpen
+                            ? "absolute z-30 top-[100%] right-0"
+                            : "dropdown-menu z-[9999] hidden absolute invisible opacity-0 translate-y-1"
+                    }
+                >
                     <div className="dropdown-content rounded-md border-transparent p-2 shadow-[0px_3px_10px_#00000017] dark:border-transparent dark:bg-darkmode-600 mt-px w-56 bg-theme-1 text-white">
                         <div className="p-2 font-medium font-normal">
                             <div className="font-medium">Johnny Depp</div>
@@ -23,14 +42,19 @@ const Header = () => {
                                 Backend Engineer
                             </div>
                         </div>
-                        <div className="h-px my-2 -mx-2 bg-slate-200/60 dark:bg-darkmode-400 bg-white/[0.08]">
-                        </div>
-                        <a className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item hover:bg-white/5" href='/profile'>
+                        <div className="h-px my-2 -mx-2 bg-slate-200/60 dark:bg-darkmode-400 bg-white/[0.08]" />
+                        <a
+                            className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item hover:bg-white/5"
+                            href="/profile"
+                        >
                             <UserCircle className="stroke-1.5 mr-2 h-4 w-4" />
                             Profile
                         </a>
-                        <div className="h-px my-2 -mx-2 bg-slate-200/60 dark:bg-darkmode-400 bg-white/[0.08]"></div>
-                        <a className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item hover:bg-white/5">
+                        <div className="h-px my-2 -mx-2 bg-slate-200/60 dark:bg-darkmode-400 bg-white/[0.08]" />
+                        <a
+                            className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item hover:bg-white/5"
+                            href="#"
+                        >
                             <ToggleRight className="stroke-1.5 mr-2 h-4 w-4" />
                             Logout
                         </a>
