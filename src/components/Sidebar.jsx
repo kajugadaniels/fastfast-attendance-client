@@ -11,7 +11,7 @@ const Sidebar = () => {
             <div className="my-6 side-nav__divider"></div>
             <ul>
                 <li>
-                    <a href="/dashboard" className="side-menu">
+                    <a href="/dashboard" className="side-menu side-menu--active">
                         <div className="side-menu__icon">
                             <House className="stroke-1.5 w-5 h-5" />
                         </div>

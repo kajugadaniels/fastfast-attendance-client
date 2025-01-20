@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChartBar, CircleX, CreditCard } from 'lucide-react';
+import { ChartBar, CircleX, House } from 'lucide-react';
 
 const MobileMenu = () => {
     return (
@@ -18,9 +18,9 @@ const MobileMenu = () => {
                 </a>
                 <ul className="py-2">
                     <li>
-                        <a className="menu" href="rubick-side-menu-point-of-sale-page.html">
+                        <a className="menu" href="/dashboard">
                             <div className="menu__icon">
-                                <CreditCard className="stroke-1.5 w-5 h-5" />
+                                <House className="stroke-1.5 w-5 h-5" />
                             </div>
                             <div className="menu__title">
                                 Dashboard
