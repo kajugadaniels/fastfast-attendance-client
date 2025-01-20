@@ -4,42 +4,23 @@ import { ChevronLeft, ChevronRight, ChevronsRight, File, FileText, Plus, Printer
 const GetEmployees = () => {
     return (
         <>
-            <h2 className="intro-y mt-10 text-lg font-medium">
-                Employees
-            </h2>
+            <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
+                <h2 className="mr-auto text-lg font-medium">
+                    Employees
+                </h2>
+                <a href='/employee/add' className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-primary border-primary text-white dark:border-primary mr-2 shadow-md">
+                    Add New Employee
+                    <span className="flex h-5 w-5 items-center justify-center">
+                        <Plus className="stroke-1.5 h-4 w-4" />
+                    </span>
+                </a>
+            </div>
             <div className="mt-5 grid grid-cols-12 gap-6">
-                <div className="intro-y col-span-12 mt-2 flex flex-wrap items-center xl:flex-nowrap">
-                    <a href='/employee/add' className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-primary border-primary text-white dark:border-primary mr-2 shadow-md">
-                        Add New Employee
-                        <span className="flex h-5 w-5 items-center justify-center">
-                            <Plus className="stroke-1.5 h-4 w-4" />
-                        </span>
-                    </a>
-                    <div className="dropdown relative">
-                        <div data-transition="" data-selector=".show" data-enter="transition-all ease-linear duration-150" data-enter-from="absolute !mt-5 invisible opacity-0 translate-y-1" data-enter-to="!mt-1 visible opacity-100 translate-y-0" data-leave="transition-all ease-linear duration-150" data-leave-from="!mt-1 visible opacity-100 translate-y-0" data-leave-to="absolute !mt-5 invisible opacity-0 translate-y-1" className="dropdown-menu absolute z-[9999] hidden">
-                            <div className="dropdown-content rounded-md border-transparent bg-white p-2 shadow-[0px_3px_10px_#00000017] dark:border-transparent dark:bg-darkmode-600 w-40">
-                                <a className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item">
-                                    <Printer className="stroke-1.5 mr-2 h-4 w-4" />
-                                    Print
-                                </a>
-                                <a className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item">
-                                    <FileText className="stroke-1.5 mr-2 h-4 w-4" />
-                                    Export to Excel
-                                </a>
-                                <a className="cursor-pointer flex items-center p-2 transition duration-300 ease-in-out rounded-md hover:bg-slate-200/60 dark:bg-darkmode-600 dark:hover:bg-darkmode-400 dropdown-item">
-                                    <FileText className="stroke-1.5 mr-2 h-4 w-4" />
-                                    Export to PDF
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mx-auto hidden text-slate-500 xl:block">
-                        Showing 1 to 10 of 150 entries
-                    </div>
+                <div className="intro-y col-span-12 mt-2 flex flex-wrap items-right xl:flex-nowrap">
                     <div className="mt-3 flex w-full items-center xl:mt-0 xl:w-auto">
                         <div className="relative w-56 text-slate-500">
                             <input type="text" placeholder="Search..." className="disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-darkmode-800/50 dark:disabled:border-transparent [&[readonly]]:bg-slate-100 [&[readonly]]:cursor-not-allowed [&[readonly]]:dark:bg-darkmode-800/50 [&[readonly]]:dark:border-transparent transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus:border-primary focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 dark:placeholder:text-slate-500/80 group-[.form-inline]:flex-1 group-[.input-group]:rounded-none group-[.input-group]:[&:not(:first-child)]:border-l-transparent group-[.input-group]:first:rounded-l group-[.input-group]:last:rounded-r group-[.input-group]:z-10 !box w-56 pr-10" />
-                                <Search className="stroke-1.5 absolute inset-y-0 right-0 my-auto mr-3 h-4 w-4" />
+                            <Search className="stroke-1.5 absolute inset-y-0 right-0 my-auto mr-3 h-4 w-4" />
                         </div>
                         <select className="disabled:bg-slate-100 disabled:cursor-not-allowed disabled:dark:bg-darkmode-800/50 [&[readonly]]:bg-slate-100 [&[readonly]]:cursor-not-allowed [&[readonly]]:dark:bg-darkmode-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus:border-primary focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 group-[.form-inline]:flex-1 !box ml-2 w-56 xl:w-auto">
                             <option>Status</option>
