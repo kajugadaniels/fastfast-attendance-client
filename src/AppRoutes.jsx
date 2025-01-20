@@ -1,5 +1,5 @@
 import React from 'react'
-import {  } from './pages'
+import { NotFound } from './pages'
 import { Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import { Dashboard, Login } from './pages'
@@ -11,6 +11,7 @@ const AppRoutes = () => {
             <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
             </Route>
+            <Route path='*' element={<NotFound />} />
         </Routes>
     )
 }
