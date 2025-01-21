@@ -121,3 +121,12 @@ export const createEmployee = async (employeeData) => {
     }
 };
 
+export const fetchEmployee = async (empId) => {
+    try {
+        const response = await apiClient.get(`/api/employee/${empId}/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
