@@ -112,3 +112,12 @@ export const fetchEmployees = async () => {
     }
 };
 
+export const createEmployee = async (employeeData) => {
+    try {
+        const response = await apiClient.post('/api/employee/add/', employeeData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
