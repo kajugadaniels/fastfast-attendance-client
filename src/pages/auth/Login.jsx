@@ -128,13 +128,15 @@ const Login = () => {
                                     type="submit"
                                     disabled={loading}
                                     className={`transition duration-200 border shadow-sm inline-flex items-center justify-center rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 
-                    bg-primary border-primary text-white dark:border-primary w-full px-4 py-3 
-                    xl:mr-3 xl:w-32 disabled:opacity-70 disabled:cursor-not-allowed`}
+                    bg-primary border-primary text-white dark:border-primary w-full px-10 py-3 
+                    xl:mr-3 xl:w-48 disabled:opacity-70 disabled:cursor-not-allowed`}
                                 >
                                     {loading ? (
                                         // Show a spinner (or any loader icon) while loading
                                         <div className="flex items-center">
-                                            Loading
+                                            <span style={{ paddingRight: '10px' }}>
+                                                Logging In
+                                            </span>
                                             <svg
                                                 className="animate-spin h-5 w-5 mr-2 text-white"
                                                 xmlns="http://www.w3.org/2000/svg"
