@@ -166,3 +166,12 @@ export const addAttendance = async (attendanceData) => {
     }
 };
 
+export const fetchEmployeeAttendanceHistory = async (employeeId) => {
+    try {
+        const response = await apiClient.get(`/api/attendance/${employeeId}/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
