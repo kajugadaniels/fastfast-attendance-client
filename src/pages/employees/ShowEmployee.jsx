@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { Eye, User, FileText, ClipboardList, RefreshCcw } from 'lucide-react'
-import { fetchEmployee } from '../../api' // <-- Adjust to match your API function name
+import {
+    Eye,
+    User,
+    FileText,
+    ClipboardList,
+    RefreshCcw
+} from 'lucide-react'
+import { fetchEmployee } from '../../api'
 
 const ShowEmployee = () => {
     const { id } = useParams()
@@ -11,12 +17,20 @@ const ShowEmployee = () => {
     const [employeeData, setEmployeeData] = useState(null)
     const [loading, setLoading] = useState(false)
 
+    // ------------------------------
+    //   FILTER & SORT STATES
+    // ------------------------------
+    const [attendanceStatus, setAttendanceStatus] = useState('') // '', 'true', or 'false'
+    const [dateStart, setDateStart] = useState('')
+    const [dateEnd, setDateEnd] = useState('')
+    // Sort can be 'dateAsc', 'dateDesc', 'salaryAsc', 'salaryDesc'
+    const [sortOption, setSortOption] = useState('dateDesc')
+
     useEffect(() => {
         const getEmployeeDetails = async () => {
             try {
                 setLoading(true)
                 const res = await fetchEmployee(id)
-                // Expecting res => { data: { employee: {...}, attendance_history: [...], total_salary, recent_activities: [...] }, message: ... }
                 setEmployeeData(res.data)
             } catch (error) {
                 toast.error(
@@ -28,12 +42,68 @@ const ShowEmployee = () => {
                 setLoading(false)
             }
         }
-
         getEmployeeDetails()
     }, [id])
 
     const handleGoBack = () => {
         navigate('/employees')
+    }
+
+    // ------------------------------
+    //   FILTER & SORT LOGIC
+    // ------------------------------
+    const getFilteredSortedAttendance = () => {
+        if (!employeeData || !employeeData.attendance_history) return []
+
+        let filtered = [...employeeData.attendance_history]
+
+        // 1) Filter by attendance status
+        if (attendanceStatus === 'true') {
+            filtered = filtered.filter((att) => att.attended === true)
+        } else if (attendanceStatus === 'false') {
+            filtered = filtered.filter((att) => att.attended === false)
+        }
+
+        // 2) Filter by date range
+        if (dateStart) {
+            const start = new Date(dateStart)
+            filtered = filtered.filter((att) => {
+                const attDate = new Date(att.time_in)
+                return attDate >= start
+            })
+        }
+        if (dateEnd) {
+            const end = new Date(dateEnd)
+            // end time is end-of-day for inclusive range
+            end.setHours(23, 59, 59, 999)
+            filtered = filtered.filter((att) => {
+                const attDate = new Date(att.time_in)
+                return attDate <= end
+            })
+        }
+
+        // 3) Sorting
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.time_in)
+            const dateB = new Date(b.time_in)
+            const salaryA = parseFloat(a.salary)
+            const salaryB = parseFloat(b.salary)
+
+            switch (sortOption) {
+                case 'dateAsc':
+                    return dateA - dateB
+                case 'dateDesc':
+                    return dateB - dateA
+                case 'salaryAsc':
+                    return salaryA - salaryB
+                case 'salaryDesc':
+                    return salaryB - salaryA
+                default:
+                    return 0
+            }
+        })
+
+        return filtered
     }
 
     // While data is loading
@@ -86,15 +156,21 @@ const ShowEmployee = () => {
     }
 
     // Destructure data for convenience
-    const { employee, attendance_history, total_salary, recent_activities } = employeeData
+    const {
+        employee,
+        attendance_history,
+        total_salary,
+        recent_activities
+    } = employeeData
+
+    // Filter + Sort attendance
+    const filteredSortedAttendance = getFilteredSortedAttendance()
 
     return (
         <>
             {/* Header Section */}
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
-                <h2 className="mr-auto text-lg font-medium">
-                    Employee Details
-                </h2>
+                <h2 className="mr-auto text-lg font-medium">Employee Details</h2>
                 <button
                     onClick={handleGoBack}
                     className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white mr-2 shadow-md"
@@ -116,7 +192,9 @@ const ShowEmployee = () => {
                     </div>
                     <div className="mt-4 space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400 text-sm">Name:</span>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm">
+                                Name:
+                            </span>
                             <span className="font-medium">{employee.name}</span>
                         </div>
                         <div className="flex justify-between">
@@ -143,7 +221,9 @@ const ShowEmployee = () => {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500 text-sm">Salary:</span>
-                            <span className="font-medium">{employee.salary} RWF</span>
+                            <span className="font-medium">
+                                {employee.salary} RWF
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -190,26 +270,93 @@ const ShowEmployee = () => {
                     <div className="box p-5">
                         <div className="flex items-center border-b pb-3">
                             <FileText className="mr-2 text-primary" />
-                            <h3 className="font-medium text-base">Total Salary from Attendance</h3>
+                            <h3 className="font-medium text-base">
+                                Total Salary from Attendance
+                            </h3>
                         </div>
                         <div className="mt-4 text-center">
                             <h1 className="text-3xl font-bold text-green-600">
                                 {total_salary} RWF
                             </h1>
                             <p className="mt-2 text-slate-500 text-sm">
-                                This is the sum of the salary snapshots from all attendance records.
+                                This is the sum of the salary snapshots from all attendance
+                                records.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Full Attendance History */}
+                {/* Full Attendance History with Filters & Sorting */}
                 <div className="intro-y col-span-12 box p-5">
                     <div className="flex items-center border-b pb-3">
                         <ClipboardList className="mr-2 text-primary" />
                         <h3 className="font-medium text-base">Attendance History</h3>
                     </div>
-                    {attendance_history && attendance_history.length > 0 ? (
+
+                    {/* FILTERS & SORTING UI */}
+                    <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        {/* Attendance Status Filter */}
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="attendanceStatus" className="text-sm">
+                                Attendance:
+                            </label>
+                            <select
+                                id="attendanceStatus"
+                                value={attendanceStatus}
+                                onChange={(e) => setAttendanceStatus(e.target.value)}
+                                className="transition duration-200 border-slate-200 text-sm rounded-md px-2 py-1 focus:ring-4 focus:ring-primary"
+                            >
+                                <option value="">All</option>
+                                <option value="true">Present</option>
+                                <option value="false">Absent</option>
+                            </select>
+                        </div>
+
+                        {/* Date Range Filters */}
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="dateStart" className="text-sm">
+                                From:
+                            </label>
+                            <input
+                                type="date"
+                                id="dateStart"
+                                value={dateStart}
+                                onChange={(e) => setDateStart(e.target.value)}
+                                className="transition duration-200 border-slate-200 text-sm rounded-md px-2 py-1 focus:ring-4 focus:ring-primary"
+                            />
+                            <label htmlFor="dateEnd" className="text-sm">
+                                To:
+                            </label>
+                            <input
+                                type="date"
+                                id="dateEnd"
+                                value={dateEnd}
+                                onChange={(e) => setDateEnd(e.target.value)}
+                                className="transition duration-200 border-slate-200 text-sm rounded-md px-2 py-1 focus:ring-4 focus:ring-primary"
+                            />
+                        </div>
+
+                        {/* Sort Options */}
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="sortOption" className="text-sm">
+                                Sort By:
+                            </label>
+                            <select
+                                id="sortOption"
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value)}
+                                className="transition duration-200 border-slate-200 text-sm rounded-md px-2 py-1 focus:ring-4 focus:ring-primary"
+                            >
+                                <option value="dateDesc">Date (Newest)</option>
+                                <option value="dateAsc">Date (Oldest)</option>
+                                <option value="salaryAsc">Salary (Lowest)</option>
+                                <option value="salaryDesc">Salary (Highest)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Filtered & Sorted Attendance History Table */}
+                    {filteredSortedAttendance.length > 0 ? (
                         <div className="mt-4 overflow-x-auto">
                             <table className="table table-bordered">
                                 <thead>
@@ -221,7 +368,7 @@ const ShowEmployee = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {attendance_history.map((att) => (
+                                    {filteredSortedAttendance.map((att) => (
                                         <tr key={att.id}>
                                             <td className="whitespace-nowrap">{att.id}</td>
                                             <td className="whitespace-nowrap">
@@ -240,7 +387,7 @@ const ShowEmployee = () => {
                         </div>
                     ) : (
                         <div className="mt-2 text-slate-500">
-                            No attendance records found for this employee.
+                            No attendance records match your criteria.
                         </div>
                     )}
                 </div>
