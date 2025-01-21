@@ -340,7 +340,7 @@ const GetEmployees = () => {
                                                     onClick={() => handleEditEmployee(emp.id)}
                                                 >
                                                     <Eye className="stroke-1.5 mr-1 h-4 w-4" />
-                                                    Edit
+                                                    View
                                                 </button>
                                                 <button
                                                     className="mr-3 flex items-center text-green-600"
