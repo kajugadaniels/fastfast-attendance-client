@@ -175,3 +175,12 @@ export const fetchEmployeeAttendanceHistory = async (employeeId) => {
     }
 };
 
+export const updateAttendance = async (attendanceId, attendanceData) => {
+    try {
+        const response = await apiClient.patch(`/api/attendance/${attendanceId}/edit/`, attendanceData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
