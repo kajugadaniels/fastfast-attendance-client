@@ -130,3 +130,12 @@ export const fetchEmployee = async (empId) => {
     }
 };
 
+export const updateEmployee = async (empId, employeeData) => {
+    try {
+        const response = await apiClient.patch(`/api/employee/${empId}/edit/`, employeeData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
