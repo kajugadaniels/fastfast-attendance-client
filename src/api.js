@@ -66,3 +66,12 @@ export const fetchUsers = async () => {
         throw error;
     }
 };
+
+export const createUser = async (userData) => {
+    try {
+        const response = await apiClient.post('/api/user/add/', userData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
