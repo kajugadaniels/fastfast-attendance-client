@@ -32,22 +32,17 @@ const AddEmployee = () => {
                                                 <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">Required</div>
                                             </div>
                                             <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                Please enter the employee’s full name, select their gender, and provide a unique finger ID. All fields are required for identification.
+                                                Please enter the employee’s full name, and provide a unique finger ID. All fields are required for identification.
                                             </div>
                                         </div>
                                     </label>
                                     <div className="mt-3 w-full flex-1 xl:mt-0">
-                                        <div className="grid-cols-3 gap-3 sm:grid">
+                                        <div className="grid-cols-2 gap-3 sm:grid">
                                             <input
                                                 type="text"
                                                 placeholder="Enter Employee Name"
                                                 className="disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-darkmode-800/50 dark:disabled:border-transparent [&[readonly]]:bg-slate-100 [&[readonly]]:cursor-not-allowed [&[readonly]]:dark:bg-darkmode-800/50 [&[readonly]]:dark:border-transparent transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus:border-primary focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 dark:placeholder:text-slate-500/80 group-[.form-inline]:flex-1"
                                             />
-                                            <select className="disabled:bg-slate-100 disabled:cursor-not-allowed disabled:dark:bg-darkmode-800/50 [&[readonly]]:bg-slate-100 [&[readonly]]:cursor-not-allowed [&[readonly]]:dark:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus:border-primary focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 group-[.form-inline]:flex-1">
-                                                <option value="">Select Gender</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                            </select>
                                             <input
                                                 type="number"
                                                 placeholder="Finger ID"
@@ -57,26 +52,27 @@ const AddEmployee = () => {
                                     </div>
                                 </div>
 
-                                {/* Email & Phone Number */}
+                                {/* Gender & Phone Number */}
                                 <div className="block sm:flex group form-inline mt-5 flex-col items-start pt-5 first:mt-0 first:pt-0 xl:flex-row">
                                     <label className="inline-block mb-2 group-[.form-inline]:mb-2 group-[.form-inline]:sm:mb-0 group-[.form-inline]:sm:mr-5 group-[.form-inline]:sm:text-right xl:!mr-10 xl:w-64">
                                         <div className="text-left">
                                             <div className="flex items-center">
-                                                <div className="font-medium">Email & Phone Number</div>
+                                                <div className="font-medium">Gender & Phone Number</div>
                                                 <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">Required</div>
                                             </div>
                                             <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                Provide a valid email address and primary phone number for contact purposes. Both fields are required.
+                                                Provide a valid gender and primary phone number for contact purposes. Both fields are required.
                                             </div>
                                         </div>
                                     </label>
                                     <div className="mt-3 w-full flex-1 xl:mt-0">
                                         <div className="grid-cols-2 gap-3 sm:grid">
-                                            <input
-                                                type="email"
-                                                placeholder="Email Address"
-                                                className="disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-darkmode-800/50 dark:disabled:border-transparent [&[readonly]]:bg-slate-100 [&[readonly]]:cursor-not-allowed [&[readonly]]:dark:bg-darkmode-800/50 [&[readonly]]:dark:border-transparent transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus:border-primary focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 dark:placeholder:text-slate-500/80 group-[.form-inline]:flex-1"
-                                            />
+                                            <select className="disabled:bg-slate-100 disabled:cursor-not-allowed disabled:dark:bg-darkmode-800/50 [&[readonly]]:bg-slate-100 [&[readonly]]:cursor-not-allowed [&[readonly]]:dark:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus:border-primary focus:border-opacity-40 dark:bg-darkmode-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 group-[.form-inline]:flex-1">
+                                                <option value="">Select Gender</option>
+                                                <option value="M">Male</option>
+                                                <option value="F">Female</option>
+                                                <option value="O">Other</option>
+                                            </select>
                                             <input
                                                 type="number"
                                                 placeholder="Enter Phone Number"
