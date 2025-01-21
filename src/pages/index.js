@@ -8,4 +8,6 @@ export { default as AddEmployee } from './employees/AddEmployee'
 export { default as EditEmployee } from './employees/EditEmployee'
 export { default as ShowEmployee } from './employees/ShowEmployee'
 
+export { default as GetAttendances } from './attendances/GetAttendances'
+
 export { default as NotFound } from './NotFound'
