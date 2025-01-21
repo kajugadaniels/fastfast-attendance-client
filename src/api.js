@@ -57,3 +57,12 @@ export const updateUserProfile = async (updateData) => {
         throw error;
     }
 };
+
+export const fetchUsers = async () => {
+    try {
+        const response = await apiClient.get('/api/users/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
