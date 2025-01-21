@@ -103,3 +103,12 @@ export const deleteUser = async (userId) => {
     }
 };
 
+export const fetchEmployees = async () => {
+    try {
+        const response = await apiClient.get('/api/employees/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
