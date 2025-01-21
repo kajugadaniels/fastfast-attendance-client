@@ -139,3 +139,12 @@ export const updateEmployee = async (empId, employeeData) => {
     }
 };
 
+export const deleteEmployee = async (empId) => {
+    try {
+        const response = await apiClient.delete(`/api/employee/${empId}/delete/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
