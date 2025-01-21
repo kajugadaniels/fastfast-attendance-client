@@ -136,6 +136,10 @@ const GetEmployees = () => {
         navigate('/employee/add')
     }
 
+    const handleShowEmployee = (empId) => {
+        navigate(`/employee/${empId}`)
+    }
+
     const handleEditEmployee = (empId) => {
         navigate(`/employee/${empId}/edit`)
     }
@@ -337,7 +341,7 @@ const GetEmployees = () => {
                                             <div className="flex items-center justify-center">
                                                 <button
                                                     className="mr-3 flex items-center text-blue-600"
-                                                    onClick={() => handleEditEmployee(emp.id)}
+                                                    onClick={() => handleShowEmployee(emp.id)}
                                                 >
                                                     <Eye className="stroke-1.5 mr-1 h-4 w-4" />
                                                     View
