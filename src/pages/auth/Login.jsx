@@ -36,6 +36,7 @@ const Login = () => {
 
             // Store token
             localStorage.setItem('token', response.token)
+            localStorage.setItem('user', JSON.stringify(response.user)) 
             toast.success(response.message || 'Login successful.')
 
             // Redirect to a protected route
