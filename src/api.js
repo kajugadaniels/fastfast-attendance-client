@@ -94,3 +94,12 @@ export const updateUser = async (userId, userData) => {
     }
 };
 
+export const deleteUser = async (userId) => {
+    try {
+        const response = await apiClient.delete(`/api/user/${userId}/delete/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
