@@ -75,3 +75,12 @@ export const createUser = async (userData) => {
         throw error;
     }
 };
+
+export const fetchUser = async (userId) => {
+    try {
+        const response = await apiClient.get(`/api/user/${userId}/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
