@@ -148,3 +148,12 @@ export const deleteEmployee = async (empId) => {
     }
 };
 
+export const fetchAttendances = async () => {
+    try {
+        const response = await apiClient.get('/api/attendance/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
