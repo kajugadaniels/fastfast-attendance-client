@@ -39,3 +39,12 @@ export const loginUser = async (email, password) => {
         throw error;
     }
 };
+
+export const logoutUser = async () => {
+    try {
+        const response = await apiClient.post('/api/auth/logout/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
