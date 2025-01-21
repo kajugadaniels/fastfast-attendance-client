@@ -157,3 +157,12 @@ export const fetchAttendances = async () => {
     }
 };
 
+export const addAttendance = async (attendanceData) => {
+    try {
+        const response = await apiClient.post('/api/attendance/add/', attendanceData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
