@@ -42,12 +42,12 @@ export const loginUser = async (email, password) => {
 
 export const logoutUser = async () => {
     try {
-        const response = await apiClient.post('/auth/logout/');
-        return response.data;
+        const response = await apiClient.post('/api/auth/logout/')
+        return response.data
     } catch (error) {
-        throw error;
+        throw error
     }
-};
+}
 
 export const updateUserProfile = async (updateData) => {
     try {
