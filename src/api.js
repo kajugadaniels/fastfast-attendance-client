@@ -42,7 +42,7 @@ export const loginUser = async (email, password) => {
 
 export const logoutUser = async () => {
     try {
-        const response = await apiClient.post('/api/auth/logout/');
+        const response = await apiClient.post('/auth/logout/');
         return response.data;
     } catch (error) {
         throw error;
@@ -51,7 +51,7 @@ export const logoutUser = async () => {
 
 export const updateUserProfile = async (updateData) => {
     try {
-        const response = await apiClient.patch('/api/auth/profile-update/', updateData);
+        const response = await apiClient.patch('/auth/profile-update/', updateData);
         return response.data;
     } catch (error) {
         throw error;
@@ -60,7 +60,7 @@ export const updateUserProfile = async (updateData) => {
 
 export const fetchUsers = async () => {
     try {
-        const response = await apiClient.get('/api/users/');
+        const response = await apiClient.get('/users/');
         return response.data;
     } catch (error) {
         throw error;
@@ -69,7 +69,7 @@ export const fetchUsers = async () => {
 
 export const createUser = async (userData) => {
     try {
-        const response = await apiClient.post('/api/user/add/', userData);
+        const response = await apiClient.post('/user/add/', userData);
         return response.data;
     } catch (error) {
         throw error;
@@ -78,7 +78,7 @@ export const createUser = async (userData) => {
 
 export const fetchUser = async (userId) => {
     try {
-        const response = await apiClient.get(`/api/user/${userId}/`);
+        const response = await apiClient.get(`/user/${userId}/`);
         return response.data;
     } catch (error) {
         throw error;
@@ -87,7 +87,7 @@ export const fetchUser = async (userId) => {
 
 export const updateUser = async (userId, userData) => {
     try {
-        const response = await apiClient.patch(`/api/user/${userId}/edit/`, userData);
+        const response = await apiClient.patch(`/user/${userId}/edit/`, userData);
         return response.data;
     } catch (error) {
         throw error;
@@ -96,7 +96,7 @@ export const updateUser = async (userId, userData) => {
 
 export const deleteUser = async (userId) => {
     try {
-        const response = await apiClient.delete(`/api/user/${userId}/delete/`);
+        const response = await apiClient.delete(`/user/${userId}/delete/`);
         return response.data;
     } catch (error) {
         throw error;
@@ -105,7 +105,7 @@ export const deleteUser = async (userId) => {
 
 export const fetchEmployees = async () => {
     try {
-        const response = await apiClient.get('/api/employees/');
+        const response = await apiClient.get('/employees/');
         return response.data;
     } catch (error) {
         throw error;
@@ -114,7 +114,7 @@ export const fetchEmployees = async () => {
 
 export const createEmployee = async (employeeData) => {
     try {
-        const response = await apiClient.post('/api/employee/add/', employeeData);
+        const response = await apiClient.post('/employee/add/', employeeData);
         return response.data;
     } catch (error) {
         throw error;
@@ -123,7 +123,7 @@ export const createEmployee = async (employeeData) => {
 
 export const fetchEmployee = async (empId) => {
     try {
-        const response = await apiClient.get(`/api/employee/${empId}/`);
+        const response = await apiClient.get(`/employee/${empId}/`);
         return response.data;
     } catch (error) {
         throw error;
@@ -132,7 +132,7 @@ export const fetchEmployee = async (empId) => {
 
 export const updateEmployee = async (empId, employeeData) => {
     try {
-        const response = await apiClient.patch(`/api/employee/${empId}/edit/`, employeeData);
+        const response = await apiClient.patch(`/employee/${empId}/edit/`, employeeData);
         return response.data;
     } catch (error) {
         throw error;
@@ -141,7 +141,7 @@ export const updateEmployee = async (empId, employeeData) => {
 
 export const deleteEmployee = async (empId) => {
     try {
-        const response = await apiClient.delete(`/api/employee/${empId}/delete/`);
+        const response = await apiClient.delete(`/employee/${empId}/delete/`);
         return response.data;
     } catch (error) {
         throw error;
@@ -150,7 +150,7 @@ export const deleteEmployee = async (empId) => {
 
 export const fetchAttendances = async () => {
     try {
-        const response = await apiClient.get('/api/attendance/');
+        const response = await apiClient.get('/attendance/');
         return response.data;
     } catch (error) {
         throw error;
@@ -159,7 +159,7 @@ export const fetchAttendances = async () => {
 
 export const addAttendance = async (attendanceData) => {
     try {
-        const response = await apiClient.post('/api/attendance/add/', attendanceData);
+        const response = await apiClient.post('/attendance/add/', attendanceData);
         return response.data;
     } catch (error) {
         throw error;
@@ -168,7 +168,7 @@ export const addAttendance = async (attendanceData) => {
 
 export const fetchEmployeeAttendanceHistory = async (employeeId) => {
     try {
-        const response = await apiClient.get(`/api/attendance/${employeeId}/`);
+        const response = await apiClient.get(`/attendance/${employeeId}/`);
         return response.data;
     } catch (error) {
         throw error;
@@ -177,10 +177,18 @@ export const fetchEmployeeAttendanceHistory = async (employeeId) => {
 
 export const updateAttendance = async (attendanceId, attendanceData) => {
     try {
-        const response = await apiClient.patch(`/api/attendance/${attendanceId}/edit/`, attendanceData);
+        const response = await apiClient.patch(`/attendance/${attendanceId}/edit/`, attendanceData);
         return response.data;
     } catch (error) {
         throw error;
     }
 };
 
+export const deleteAttendance = async (attendanceId) => {
+    try {
+        const response = await apiClient.delete(`/attendance/${attendanceId}/delete/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
