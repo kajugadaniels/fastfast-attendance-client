@@ -84,3 +84,13 @@ export const fetchUser = async (userId) => {
         throw error;
     }
 };
+
+export const updateUser = async (userId, userData) => {
+    try {
+        const response = await apiClient.patch(`/api/user/${userId}/edit/`, userData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
