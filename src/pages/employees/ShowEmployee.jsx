@@ -221,9 +221,7 @@ const ShowEmployee = () => {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-slate-500 text-sm">Salary:</span>
-                            <span className="font-medium">
-                                {employee.salary} RWF
-                            </span>
+                            <span className="font-medium">{employee.salary} RWF</span>
                         </div>
                     </div>
                 </div>
@@ -237,24 +235,36 @@ const ShowEmployee = () => {
                         </div>
                         {recent_activities && recent_activities.length > 0 ? (
                             <div className="mt-4 overflow-x-auto">
-                                <table className="table table-striped">
+                                {/* Updated Table Design */}
+                                <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
                                     <thead>
                                         <tr>
-                                            <th className="whitespace-nowrap">Date/Time In</th>
-                                            <th className="whitespace-nowrap">Attended</th>
-                                            <th className="whitespace-nowrap">Salary Snapshot</th>
+                                            <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                                Date/Time In
+                                            </th>
+                                            <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                                Attended
+                                            </th>
+                                            <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                                Salary Snapshot
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {recent_activities.map((att) => (
-                                            <tr key={att.id} className="align-top">
-                                                <td className="whitespace-nowrap">
+                                            <tr
+                                                key={att.id}
+                                                className="intro-x bg-white dark:bg-darkmode-600 shadow-[5px_3px_5px_#00000005]"
+                                            >
+                                                <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
                                                     {new Date(att.time_in).toLocaleString()}
                                                 </td>
-                                                <td className="whitespace-nowrap">
+                                                <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
                                                     {att.attended ? 'Present' : 'Absent'}
                                                 </td>
-                                                <td className="whitespace-nowrap">{att.salary} RWF</td>
+                                                <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
+                                                    {att.salary} RWF
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -358,26 +368,39 @@ const ShowEmployee = () => {
                     {/* Filtered & Sorted Attendance History Table */}
                     {filteredSortedAttendance.length > 0 ? (
                         <div className="mt-4 overflow-x-auto">
-                            <table className="table table-bordered">
+                            <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
                                 <thead>
                                     <tr>
-                                        <th className="whitespace-nowrap">ID</th>
-                                        <th className="whitespace-nowrap">Date/Time In</th>
-                                        <th className="whitespace-nowrap">Attended</th>
-                                        <th className="whitespace-nowrap">Salary Snapshot</th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                            ID
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                            Date/Time In
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                            Attended
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                            Salary Snapshot
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredSortedAttendance.map((att) => (
-                                        <tr key={att.id}>
-                                            <td className="whitespace-nowrap">{att.id}</td>
-                                            <td className="whitespace-nowrap">
+                                        <tr
+                                            key={att.id}
+                                            className="intro-x bg-white dark:bg-darkmode-600 shadow-[5px_3px_5px_#00000005]"
+                                        >
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
+                                                {att.id}
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
                                                 {new Date(att.time_in).toLocaleString()}
                                             </td>
-                                            <td className="whitespace-nowrap">
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
                                                 {att.attended ? 'Present' : 'Absent'}
                                             </td>
-                                            <td className="whitespace-nowrap">
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0">
                                                 {att.salary} RWF
                                             </td>
                                         </tr>
