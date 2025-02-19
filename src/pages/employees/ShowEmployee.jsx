@@ -86,19 +86,24 @@ const ShowEmployee = () => {
     const handleAttendanceSubmit = async () => {
         try {
             const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
-            if (response) {
+
+            // If the response is successful, extract the success message
+            if (response && response.message) {
+                const successMessage = response.message.detail;
+                setMessage(successMessage);
+                toast.success(successMessage);
+
                 // Update the employee data with new attendance history
                 setEmployeeData({
                     ...employeeData,
-                    attendance_history: [...employeeData.attendance_history, response],
+                    attendance_history: [...employeeData.attendance_history, response.data],
                 });
-
-                // Show success message
-                setMessage('Attendance recorded successfully!');
-                toast.success('Attendance recorded successfully!');
             }
         } catch (error) {
-            toast.error('Failed to record attendance.');
+            // If there's an error, capture the error message
+            const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
+            setMessage(errorMessage);
+            toast.error(errorMessage);
         }
     };
 
@@ -146,9 +151,6 @@ const ShowEmployee = () => {
                 <div className="col-span-12 lg:col-span-4 box p-5">
                     <div className="mb-5 flex justify-between items-center border-b pb-5">
                         <span className="text-base font-medium">Employee Info</span>
-                        <button onClick={() => navigate(`/employee/${id}/edit`)} className="text-primary hover:underline">
-                            <Edit className="mr-2" /> Edit Employee
-                        </button>
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between">
@@ -280,8 +282,6 @@ const ShowEmployee = () => {
                     Record Today's Attendance
                 </button>
             </div>
-
-            {message && <div className="mt-4 text-green-500">{message}</div>}
         </div>
     );
 };
