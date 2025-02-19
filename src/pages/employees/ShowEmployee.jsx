@@ -133,6 +133,12 @@ const ShowEmployee = () => {
     // Filter and sort attendance
     const filteredSortedAttendance = getFilteredSortedAttendance();
 
+    // Pagination
+    const totalRecords = filteredSortedAttendance.length;
+    const totalPages = Math.ceil(totalRecords / pageSize);
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedAttendance = filteredSortedAttendance.slice(startIndex, startIndex + pageSize);
+
     return (
         <div className="container mx-auto p-6">
             {/* Header */}
@@ -154,9 +160,6 @@ const ShowEmployee = () => {
                 <div className="col-span-12 lg:col-span-4 box p-5">
                     <div className="mb-5 flex justify-between items-center border-b pb-5">
                         <span className="text-base font-medium">Employee Info</span>
-                        <button onClick={() => navigate(`/employee/${id}/edit`)} className="text-primary hover:underline">
-                            <Edit className="mr-2" /> Edit Employee
-                        </button>
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between">
@@ -219,7 +222,7 @@ const ShowEmployee = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredSortedAttendance.map((att) => (
+                                {paginatedAttendance.map((att) => (
                                     <tr key={att.id}>
                                         <td className="px-5 py-3">{new Date(att.time_in).toLocaleString()}</td>
                                         <td className="px-5 py-3">{att.attended ? 'Present' : 'Absent'}</td>
@@ -234,7 +237,7 @@ const ShowEmployee = () => {
                                             Total Salary:
                                         </td>
                                         <td className="font-medium px-5 py-3 border-t dark:border-darkmode-300 text-right">
-                                            {total_salary}
+                                            {totalSalary(paginatedAttendance)} RWF
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -258,18 +261,18 @@ const ShowEmployee = () => {
                                 <ChevronLeft className="h-4 w-4" />
                             </button>
                             <span className="px-3 py-2">
-                                Page {currentPage} of {Math.ceil(filteredSortedAttendance.length / pageSize)}
+                                Page {currentPage} of {totalPages}
                             </span>
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === Math.ceil(filteredSortedAttendance.length / pageSize)}
+                                disabled={currentPage === totalPages}
                                 className="btn-pagination"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                             <button
-                                onClick={() => handlePageChange(Math.ceil(filteredSortedAttendance.length / pageSize))}
-                                disabled={currentPage === Math.ceil(filteredSortedAttendance.length / pageSize)}
+                                onClick={() => handlePageChange(totalPages)}
+                                disabled={currentPage === totalPages}
                                 className="btn-pagination"
                             >
                                 Last
@@ -277,13 +280,6 @@ const ShowEmployee = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-4 mt-6">
-                <button onClick={handleGoBack} className="btn-secondary">
-                    <Eye className="mr-2" /> Back to Employees
-                </button>
             </div>
         </div>
     );
