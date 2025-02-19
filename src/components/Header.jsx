@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ToggleRight, UserCircle } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { logoutUser } from '../api' // Import logoutUser function
+import { logoutUser } from '../api' // <--- Make sure your logoutUser function is imported
 
 const Header = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const dropdownRef = useRef(null)
     const navigate = useNavigate()
 
+    // Retrieve user info from localStorage (if exists)
     const [userData, setUserData] = useState({
         name: '',
         role: '',
@@ -45,15 +46,15 @@ const Header = () => {
 
     const handleLogout = async () => {
         try {
-            // (Optional) Notify backend to delete token (if required)
+            // (Optional) If you want to notify the backend to delete the token:
             await logoutUser()
 
-            // Clear localStorage
+            // Clear local storage
             localStorage.removeItem('token')
             localStorage.removeItem('user')
 
             toast.success('You have successfully logged out.')
-            navigate('/') // Redirect to login page
+            navigate('/')
         } catch (error) {
             toast.error('An error occurred during logout. Please try again.')
         }
@@ -68,6 +69,7 @@ const Header = () => {
                     </li>
                 </ol>
             </nav>
+            {/* Attach ref to the dropdown wrapper */}
             <div className="dropdown relative" ref={dropdownRef}>
                 <button
                     aria-expanded={dropdownOpen ? 'true' : 'false'}
