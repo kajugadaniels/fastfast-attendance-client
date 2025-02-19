@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchEmployee } from '../../api';
+import { fetchEmployee, addAttendance } from '../../api';
 
 const EmployeeDetails = () => {
     const { employeeId } = useParams();
@@ -25,6 +25,19 @@ const EmployeeDetails = () => {
         getEmployeeDetails();
     }, [employeeId, navigate]);
 
+    const handleAttendanceSubmit = async () => {
+        try {
+            const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
+            if (response && response.message) {
+                const successMessage = response.message.detail;
+                toast.success(successMessage);
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
+            toast.error(errorMessage);
+        }
+    };
+
     if (loading) {
         return <div>Loading...</div>;
     }
@@ -39,7 +52,12 @@ const EmployeeDetails = () => {
             <p>Name: {employeeData.employee.name}</p>
             <p>Position: {employeeData.employee.position}</p>
             <p>Salary: {employeeData.employee.salary}</p>
-            {/* Other employee details */}
+            <button
+                onClick={handleAttendanceSubmit}
+                className="btn-primary"
+            >
+                Record Attendance for {employeeData.employee.name}
+            </button>
         </div>
     );
 };
