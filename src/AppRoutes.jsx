@@ -1,7 +1,7 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
-import { Dashboard, Login, AddEmployee, EditEmployee, GetAttendances, GetEmployees, NotFound, Profile, ShowEmployee } from './pages'
+import { Dashboard, Login, AddEmployee, EditEmployee, GetAttendances, GetEmployees, NotFound, Profile, ShowEmployee, EmployeeDetails } from './pages'
 import ProtectedRoute from './components/ProtectedRoute'
 
 const AppRoutes = () => {
@@ -18,6 +18,7 @@ const AppRoutes = () => {
                     <Route path="/employee/add" element={<AddEmployee />} />
                     <Route path="/employee/:id" element={<ShowEmployee />} />
                     <Route path="/employee/:id/edit" element={<EditEmployee />} />
+                    <Route path="/employee/:id/details" element={<EmployeeDetails />} />
 
                     <Route path="/attendance" element={<GetAttendances />} />
                 </Route>
