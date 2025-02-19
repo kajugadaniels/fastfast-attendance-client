@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Eye, Edit, RefreshCcw, FileText, ClipboardList, ChevronRight, ChevronLeft } from 'lucide-react';
-import { fetchEmployee } from '../../api';
+import { fetchEmployee, addAttendance } from '../../api';
 
 const ShowEmployee = () => {
     const { id } = useParams();
@@ -10,19 +10,12 @@ const ShowEmployee = () => {
 
     const [employeeData, setEmployeeData] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    // ------------------------------
-    //   FILTER & SORT STATES
-    // ------------------------------
     const [attendanceStatus, setAttendanceStatus] = useState('');
     const [dateStart, setDateStart] = useState('');
     const [dateEnd, setDateEnd] = useState('');
     const [sortOption, setSortOption] = useState('dateDesc');
-
-    // ------------------------------
-    //   PAGINATION STATES
-    // ------------------------------
     const [currentPage, setCurrentPage] = useState(1);
+    const [message, setMessage] = useState('');
     const pageSize = 10;
 
     useEffect(() => {
@@ -44,45 +37,31 @@ const ShowEmployee = () => {
         navigate('/employees');
     };
 
-    // ------------------------------
-    //   FILTER & SORT LOGIC
-    // ------------------------------
     const getFilteredSortedAttendance = () => {
         if (!employeeData || !employeeData.attendance_history) return [];
-
         let filtered = [...employeeData.attendance_history];
 
-        // 1) Filter by attendance status
         if (attendanceStatus === 'true') {
             filtered = filtered.filter((att) => att.attended === true);
         } else if (attendanceStatus === 'false') {
             filtered = filtered.filter((att) => att.attended === false);
         }
 
-        // 2) Filter by date range
         if (dateStart) {
             const start = new Date(dateStart);
-            filtered = filtered.filter((att) => {
-                const attDate = new Date(att.time_in);
-                return attDate >= start;
-            });
+            filtered = filtered.filter((att) => new Date(att.time_in) >= start);
         }
         if (dateEnd) {
             const end = new Date(dateEnd);
             end.setHours(23, 59, 59, 999);
-            filtered = filtered.filter((att) => {
-                const attDate = new Date(att.time_in);
-                return attDate <= end;
-            });
+            filtered = filtered.filter((att) => new Date(att.time_in) <= end);
         }
 
-        // 3) Sorting
         filtered.sort((a, b) => {
             const dateA = new Date(a.time_in);
             const dateB = new Date(b.time_in);
             const salaryA = parseFloat(a.salary);
             const salaryB = parseFloat(b.salary);
-
             switch (sortOption) {
                 case 'dateAsc':
                     return dateA - dateB;
@@ -100,14 +79,27 @@ const ShowEmployee = () => {
         return filtered;
     };
 
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
-        }
-    };
-
     const totalSalary = (attendance) => {
         return attendance.reduce((sum, att) => sum + parseFloat(att.salary || 0), 0);
+    };
+
+    const handleAttendanceSubmit = async () => {
+        try {
+            const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
+            if (response) {
+                // Update the employee data with new attendance history
+                setEmployeeData({
+                    ...employeeData,
+                    attendance_history: [...employeeData.attendance_history, response],
+                });
+
+                // Show success message
+                setMessage('Attendance recorded successfully!');
+                toast.success('Attendance recorded successfully!');
+            }
+        } catch (error) {
+            toast.error('Failed to record attendance.');
+        }
     };
 
     // If loading
@@ -127,13 +119,7 @@ const ShowEmployee = () => {
         );
     }
 
-    // Destructure employee data
-    const { employee, attendance_history, total_salary, recent_activities } = employeeData;
-
-    // Filter and sort attendance
     const filteredSortedAttendance = getFilteredSortedAttendance();
-
-    // Pagination
     const totalRecords = filteredSortedAttendance.length;
     const totalPages = Math.ceil(totalRecords / pageSize);
     const startIndex = (currentPage - 1) * pageSize;
@@ -160,23 +146,26 @@ const ShowEmployee = () => {
                 <div className="col-span-12 lg:col-span-4 box p-5">
                     <div className="mb-5 flex justify-between items-center border-b pb-5">
                         <span className="text-base font-medium">Employee Info</span>
+                        <button onClick={() => navigate(`/employee/${id}/edit`)} className="text-primary hover:underline">
+                            <Edit className="mr-2" /> Edit Employee
+                        </button>
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between">
                             <span className="text-sm">Name:</span>
-                            <span>{employee.name}</span>
+                            <span>{employeeData.employee.name}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-sm">Finger ID:</span>
-                            <span>{employee.finger_id}</span>
+                            <span>{employeeData.employee.finger_id}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-sm">Position:</span>
-                            <span>{employee.position}</span>
+                            <span>{employeeData.employee.position}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-sm">Salary:</span>
-                            <span>{employee.salary} RWF</span>
+                            <span>{employeeData.employee.salary} RWF</span>
                         </div>
                     </div>
                 </div>
@@ -281,6 +270,18 @@ const ShowEmployee = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-4 mt-6">
+                <button
+                    onClick={handleAttendanceSubmit}
+                    className="btn-primary"
+                >
+                    Record Today's Attendance
+                </button>
+            </div>
+
+            {message && <div className="mt-4 text-green-500">{message}</div>}
         </div>
     );
 };
