@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Eye, Edit, RefreshCcw, FileText, ClipboardList, ChevronRight, ChevronLeft } from 'lucide-react';
-import { fetchEmployee, addAttendance } from '../../api';
+import QRCode from 'react-qr-code';
+import { addAttendance, fetchEmployee } from '../../api';
+import { Eye, Edit, ChevronLeft, ChevronRight, PenSquare, ClipboardList } from 'lucide-react';
 
 const ShowEmployee = () => {
     const { id } = useParams();
@@ -14,9 +15,11 @@ const ShowEmployee = () => {
     const [dateStart, setDateStart] = useState('');
     const [dateEnd, setDateEnd] = useState('');
     const [sortOption, setSortOption] = useState('dateDesc');
-    const [currentPage, setCurrentPage] = useState(1);
     const [message, setMessage] = useState('');
+    const qrCodeRef = useRef();
+
     const pageSize = 10;
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         const getEmployeeDetails = async () => {
@@ -37,8 +40,49 @@ const ShowEmployee = () => {
         navigate('/employees');
     };
 
+    const handleAttendanceSubmit = async () => {
+        try {
+            const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
+            if (response && response.message) {
+                const successMessage = response.message.detail;
+                setMessage(successMessage);
+                toast.success(successMessage);
+
+                // Update the employee data with new attendance history
+                setEmployeeData({
+                    ...employeeData,
+                    attendance_history: [...employeeData.attendance_history, response.data],
+                });
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
+            setMessage(errorMessage);
+            toast.error(errorMessage);
+        }
+    };
+
+    // QR Code generation logic
+    const qrCodeValue = `https://yourapp.com/employee/${employeeData?.employee?.finger_id}`;
+
+    const downloadQRCode = () => {
+        if (qrCodeRef.current) {
+            toPng(qrCodeRef.current)
+                .then((dataUrl) => {
+                    const link = document.createElement('a');
+                    link.download = `employee_${employeeData?.employee?.finger_id}_qr_code.png`;
+                    link.href = dataUrl;
+                    link.click();
+                })
+                .catch((error) => {
+                    console.error('Error generating QR code image:', error);
+                    toast.error('Failed to download QR code.');
+                });
+        }
+    };
+
     const getFilteredSortedAttendance = () => {
         if (!employeeData || !employeeData.attendance_history) return [];
+
         let filtered = [...employeeData.attendance_history];
 
         if (attendanceStatus === 'true') {
@@ -81,30 +125,6 @@ const ShowEmployee = () => {
 
     const totalSalary = (attendance) => {
         return attendance.reduce((sum, att) => sum + parseFloat(att.salary || 0), 0);
-    };
-
-    const handleAttendanceSubmit = async () => {
-        try {
-            const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
-
-            // If the response is successful, extract the success message
-            if (response && response.message) {
-                const successMessage = response.message.detail;
-                setMessage(successMessage);
-                toast.success(successMessage);
-
-                // Update the employee data with new attendance history
-                setEmployeeData({
-                    ...employeeData,
-                    attendance_history: [...employeeData.attendance_history, response.data],
-                });
-            }
-        } catch (error) {
-            // If there's an error, capture the error message
-            const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
-            setMessage(errorMessage);
-            toast.error(errorMessage);
-        }
     };
 
     // If loading
@@ -151,6 +171,9 @@ const ShowEmployee = () => {
                 <div className="col-span-12 lg:col-span-4 box p-5">
                     <div className="mb-5 flex justify-between items-center border-b pb-5">
                         <span className="text-base font-medium">Employee Info</span>
+                        <button onClick={() => navigate(`/employee/${id}/edit`)} className="text-primary hover:underline">
+                            <Edit className="mr-2" /> Edit Employee
+                        </button>
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between">
@@ -273,6 +296,19 @@ const ShowEmployee = () => {
                 </div>
             </div>
 
+            {/* QR Code Section */}
+            <div className="flex justify-center mt-6">
+                <QRCode value={qrCodeValue} size={128} />
+            </div>
+            <div className="mt-4 text-center">
+                <button
+                    onClick={downloadQRCode}
+                    className="btn-primary"
+                >
+                    Download QR Code
+                </button>
+            </div>
+
             {/* Actions */}
             <div className="flex justify-end gap-4 mt-6">
                 <button
@@ -282,6 +318,8 @@ const ShowEmployee = () => {
                     Record Today's Attendance
                 </button>
             </div>
+
+            {message && <div className="mt-4 text-green-500">{message}</div>}
         </div>
     );
 };
