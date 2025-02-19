@@ -8,6 +8,7 @@ const AppRoutes = () => {
     return (
         <Routes>
             <Route path='/' element={<Login />} />
+            <Route path="/employee/:employeeId/details" element={<EmployeeDetails />} />
 
             <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
@@ -18,7 +19,6 @@ const AppRoutes = () => {
                     <Route path="/employee/add" element={<AddEmployee />} />
                     <Route path="/employee/:id" element={<ShowEmployee />} />
                     <Route path="/employee/:id/edit" element={<EditEmployee />} />
-                    <Route path="/employee/:id/details" element={<EmployeeDetails />} />
 
                     <Route path="/attendance" element={<GetAttendances />} />
                 </Route>
