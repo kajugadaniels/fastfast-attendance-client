@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import QRCode from 'react-qr-code';
 import { addAttendance, fetchEmployee } from '../../api';
-import { Eye, Edit, ChevronLeft, ChevronRight, PenSquare, ClipboardList } from 'lucide-react';
+import { Eye, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ShowEmployee = () => {
     const { id } = useParams();
@@ -61,15 +61,15 @@ const ShowEmployee = () => {
         }
     };
 
-    // QR Code generation logic
-    const qrCodeValue = `https://yourapp.com/employee/${employeeData?.employee?.finger_id}`;
+    // QR Code generation logic using employee_id
+    const qrCodeValue = `https://yourapp.com/employee/${employeeData?.employee?.id}`;
 
     const downloadQRCode = () => {
         if (qrCodeRef.current) {
             toPng(qrCodeRef.current)
                 .then((dataUrl) => {
                     const link = document.createElement('a');
-                    link.download = `employee_${employeeData?.employee?.finger_id}_qr_code.png`;
+                    link.download = `employee_${employeeData?.employee?.id}_qr_code.png`;
                     link.href = dataUrl;
                     link.click();
                 })
@@ -319,7 +319,6 @@ const ShowEmployee = () => {
                 </button>
             </div>
 
-            {message && <div className="mt-4 text-green-500">{message}</div>}
         </div>
     );
 };
