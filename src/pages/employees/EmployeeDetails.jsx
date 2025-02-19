@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchEmployee, addAttendance } from '../../api';
+import { toast } from 'react-toastify';
 
 const EmployeeDetails = () => {
     const { employeeId } = useParams();
@@ -29,10 +30,12 @@ const EmployeeDetails = () => {
         try {
             const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
             if (response && response.message) {
+                // Success message from backend
                 const successMessage = response.message.detail;
                 toast.success(successMessage);
             }
         } catch (error) {
+            // Error message from backend
             const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
             toast.error(errorMessage);
         }
