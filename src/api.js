@@ -114,7 +114,11 @@ export const fetchEmployees = async () => {
 
 export const createEmployee = async (employeeData) => {
     try {
-        const response = await apiClient.post('/employee/add/', employeeData);
+        const response = await apiClient.post('/employee/add/', employeeData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
         return response.data;
     } catch (error) {
         throw error;
