@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { CloudUpload, Eye, Lightbulb, ToggleLeft } from 'lucide-react';
-import { fetchEmployee, updateEmployee } from '../../api'; // <-- Import your fetchEmployee and updateEmployee functions
+import { fetchEmployee, updateEmployee } from '../../api'
 
 const EditEmployee = () => {
     const navigate = useNavigate();
@@ -147,7 +147,7 @@ const EditEmployee = () => {
                                                 </div>
                                             </div>
                                         </label>
-                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-3 gap-3">
+                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-2 gap-3">
                                             <input
                                                 type="text"
                                                 name="name"

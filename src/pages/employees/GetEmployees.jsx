@@ -141,7 +141,7 @@ const GetEmployees = () => {
     }
 
     const handleEditEmployee = (empId) => {
-        navigate(`/employee/${empId}/edit`)
+        navigate(`/employee/edit/${empId}`)
     }
 
     const handleDeleteEmployee = (empId) => {
