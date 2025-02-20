@@ -14,7 +14,8 @@ const AddEmployee = () => {
         gender: '',
         phone: '',
         position: '',
-        salary: ''
+        salary: '',
+        image: null  // Add image field here
     })
     const [loading, setLoading] = useState(false)
 
@@ -22,6 +23,14 @@ const AddEmployee = () => {
     const handleChange = (e) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
+    }
+
+    // Handle image file change
+    const handleImageChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            setFormData((prev) => ({ ...prev, image: file }))
+        }
     }
 
     // Validate required fields
@@ -49,14 +58,22 @@ const AddEmployee = () => {
 
         try {
             setLoading(true)
-            const response = await createEmployee({
-                name: formData.name,
-                phone: formData.phone,
-                gender: formData.gender,
-                position: formData.position,
-                salary: formData.salary,
-                finger_id: formData.finger_id
-            })
+
+            // Prepare FormData to send file
+            const employeeData = new FormData()
+            employeeData.append('name', formData.name)
+            employeeData.append('phone', formData.phone)
+            employeeData.append('gender', formData.gender)
+            employeeData.append('position', formData.position)
+            employeeData.append('salary', formData.salary)
+            employeeData.append('finger_id', formData.finger_id)
+
+            // If image exists, append it to FormData
+            if (formData.image) {
+                employeeData.append('image', formData.image)
+            }
+
+            const response = await createEmployee(employeeData)
 
             // If backend returns { data: {...}, message: {...} }, adjust accordingly
             toast.success('Employee created successfully.')
@@ -103,17 +120,17 @@ const AddEmployee = () => {
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
-                                                    <div className="font-medium">Name & Finger ID</div>
+                                                    <div className="font-medium">Name & Finger ID & Image</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
                                                         Required
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Please enter the employee’s full name and a unique finger ID.
+                                                    Please enter the employee’s full name and a unique finger ID and employee’s profile image.
                                                 </div>
                                             </div>
                                         </label>
-                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-2 gap-3">
+                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-3 gap-3">
                                             <input
                                                 type="text"
                                                 name="name"
@@ -128,6 +145,12 @@ const AddEmployee = () => {
                                                 placeholder="Finger ID"
                                                 value={formData.finger_id}
                                                 onChange={handleChange}
+                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
+                                            />
+                                            <input
+                                                type="file"
+                                                name="image"
+                                                onChange={handleImageChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
                                         </div>
