@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import QRCode from 'react-qr-code';
 import { addAttendance, fetchEmployee } from '../../api';
 import { Eye, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { toPng } from 'html-to-image'; // Ensure this import is here
 
 const ShowEmployee = () => {
     const { id } = useParams();
@@ -16,7 +17,7 @@ const ShowEmployee = () => {
     const [dateEnd, setDateEnd] = useState('');
     const [sortOption, setSortOption] = useState('dateDesc');
     const [message, setMessage] = useState('');
-    const qrCodeRef = useRef();
+    const qrCodeRef = useRef(); // This ref is for the QR Code
 
     const pageSize = 10;
     const [currentPage, setCurrentPage] = useState(1);
@@ -66,6 +67,7 @@ const ShowEmployee = () => {
 
     const downloadQRCode = () => {
         if (qrCodeRef.current) {
+            // Ensure the QR code is fully rendered before calling toPng
             toPng(qrCodeRef.current)
                 .then((dataUrl) => {
                     const link = document.createElement('a');
@@ -298,7 +300,9 @@ const ShowEmployee = () => {
 
             {/* QR Code Section */}
             <div className="flex justify-center mt-6">
-                <QRCode value={qrCodeValue} size={128} />
+                <div ref={qrCodeRef}>
+                    <QRCode value={qrCodeValue} size={128} />
+                </div>
             </div>
             <div className="mt-4 text-center">
                 <button
@@ -318,7 +322,6 @@ const ShowEmployee = () => {
                     Record Today's Attendance
                 </button>
             </div>
-
         </div>
     );
 };
