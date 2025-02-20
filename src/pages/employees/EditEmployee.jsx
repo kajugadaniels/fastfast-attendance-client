@@ -1,65 +1,64 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { CloudUpload, Eye, Lightbulb, ToggleLeft } from 'lucide-react'
-import { fetchEmployee, updateEmployee } from '../../api'
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { CloudUpload, Eye, Lightbulb, ToggleLeft } from 'lucide-react';
+import { fetchEmployee, updateEmployee } from '../../api'; // <-- Import your fetchEmployee and updateEmployee functions
 
 const EditEmployee = () => {
-    const { id } = useParams()
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const { empId } = useParams(); // Get employee ID from route parameters
 
-    // Track form data and loading states
+    // Track form inputs and loading state
     const [formData, setFormData] = useState({
         name: '',
         finger_id: '',
         gender: '',
         phone: '',
         position: '',
-        salary: ''
-    })
-    const [loading, setLoading] = useState(false)
-    const [initialLoading, setInitialLoading] = useState(true)
+        salary: '',
+        image: null, // Image field (optional)
+    });
+    const [loading, setLoading] = useState(false);
 
-    // Fetch existing employee data on mount
+    // Fetch employee data on component mount
     useEffect(() => {
-        const getEmployee = async () => {
+        const getEmployeeData = async () => {
             try {
-                setInitialLoading(true)
-                const res = await fetchEmployee(id)
-                if (res.data) {
-                    const emp = res.data
-                    setFormData({
-                        name: emp.name || '',
-                        finger_id: emp.finger_id?.toString() || '',
-                        gender: emp.gender || '',
-                        phone: emp.phone || '',
-                        position: emp.position || '',
-                        salary: emp.salary?.toString() || ''
-                    })
-                }
+                const response = await fetchEmployee(empId);
+                setFormData({
+                    name: response.data.name,
+                    finger_id: response.data.finger_id,
+                    gender: response.data.gender,
+                    phone: response.data.phone,
+                    position: response.data.position,
+                    salary: response.data.salary,
+                    image: response.data.image || null, // Set image if available
+                });
             } catch (error) {
-                toast.error(
-                    error.response?.data?.message?.detail ||
-                    error.response?.data?.detail ||
-                    'Failed to load employee data.'
-                )
-            } finally {
-                setInitialLoading(false)
+                toast.error('Error fetching employee details.');
             }
-        }
+        };
 
-        getEmployee()
-    }, [id])
+        getEmployeeData();
+    }, [empId]);
 
     // Handle change in form inputs
     const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-    }
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // Handle image file change
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData((prev) => ({ ...prev, image: file }));
+        }
+    };
 
     // Validate required fields
     const validateForm = () => {
-        const { name, finger_id, gender, phone, position, salary } = formData
+        const { name, finger_id, gender, phone, position, salary } = formData;
         if (
             !name.trim() ||
             !finger_id.trim() ||
@@ -68,80 +67,58 @@ const EditEmployee = () => {
             !position ||
             !salary.trim()
         ) {
-            toast.error('Please fill in all required fields.')
-            return false
+            toast.error('Please fill in all required fields.');
+            return false;
         }
-        return true
-    }
+        return true;
+    };
 
-    // Submit updated employee data
+    // Submit form to update employee
     const handleUpdateEmployee = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        if (!validateForm()) return
+        if (!validateForm()) return;
 
         try {
-            setLoading(true)
-            await updateEmployee(id, {
-                name: formData.name,
-                phone: formData.phone,
-                gender: formData.gender,
-                position: formData.position,
-                salary: formData.salary,
-                finger_id: formData.finger_id
-            })
-            toast.success('Employee updated successfully.')
-            navigate('/employees')
+            setLoading(true);
+
+            // Prepare FormData to send file
+            const employeeData = new FormData();
+            employeeData.append('name', formData.name);
+            employeeData.append('phone', formData.phone);
+            employeeData.append('gender', formData.gender);
+            employeeData.append('position', formData.position);
+            employeeData.append('salary', formData.salary);
+            employeeData.append('finger_id', formData.finger_id);
+
+            // If image exists, append it to FormData
+            if (formData.image) {
+                employeeData.append('image', formData.image);
+            }
+
+            const response = await updateEmployee(empId, employeeData);
+
+            // If backend returns { data: {...}, message: {...} }, adjust accordingly
+            toast.success('Employee updated successfully.');
+            navigate('/employees');
         } catch (error) {
             toast.error(
                 error.response?.data?.message?.detail ||
                 error.response?.data?.detail ||
                 'Error updating employee.'
-            )
+            );
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
-
-    if (initialLoading) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-center">
-                    <svg
-                        className="animate-spin h-6 w-6 mb-2 text-primary inline-block"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                    >
-                        <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                        ></circle>
-                        <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v4l3.5-3.5L12 1V0a10 10 0 00-10 10h2z"
-                        ></path>
-                    </svg>
-                    <p>Loading employee data...</p>
-                </div>
-            </div>
-        )
-    }
+    };
 
     return (
         <>
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
-                <h2 className="mr-auto text-lg font-medium">
-                    Edit Employee
-                </h2>
+                <h2 className="mr-auto text-lg font-medium">Edit Employee</h2>
                 <a
-                    href="/employees"
-                    className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white dark:border-primary mr-2 shadow-md"
+                    href='/employees'
+                    className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 bg-primary border-primary text-white dark:border-primary mr-2 shadow-md"
                 >
                     Go Back
                     <span className="flex h-5 w-5 items-center justify-center">
@@ -164,17 +141,17 @@ const EditEmployee = () => {
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
-                                                    <div className="font-medium">Name & Finger ID</div>
+                                                    <div className="font-medium">Name & Finger ID & Image</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
                                                         Required
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Please update the employee’s name and unique finger ID if necessary.
+                                                    Please enter the employee’s full name, a unique finger ID, and profile image.
                                                 </div>
                                             </div>
                                         </label>
-                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-2 gap-3">
+                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-3 gap-3">
                                             <input
                                                 type="text"
                                                 name="name"
@@ -191,6 +168,12 @@ const EditEmployee = () => {
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
+                                            <input
+                                                type="file"
+                                                name="image"
+                                                onChange={handleImageChange}
+                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
+                                            />
                                         </div>
                                     </div>
 
@@ -205,7 +188,7 @@ const EditEmployee = () => {
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Update the employee's gender and phone number if needed.
+                                                    Provide the employee's gender and valid phone number.
                                                 </div>
                                             </div>
                                         </label>
@@ -243,7 +226,7 @@ const EditEmployee = () => {
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Update the employee’s position and salary if changed.
+                                                    Specify the employee’s position and monthly salary.
                                                 </div>
                                             </div>
                                         </label>
@@ -259,7 +242,6 @@ const EditEmployee = () => {
                                                 <option value="Engineer">Engineer</option>
                                                 <option value="Accountant">Accountant</option>
                                                 <option value="Administration">Administration</option>
-                                                {/* Add more if needed */}
                                             </select>
                                             <input
                                                 type="number"
@@ -289,7 +271,7 @@ const EditEmployee = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white dark:border-primary w-full py-3 md:w-52 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 bg-primary border-primary text-white dark:border-primary w-full py-3 md:w-52 disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
                                         <div className="flex items-center">
@@ -313,11 +295,11 @@ const EditEmployee = () => {
                                                     d="M4 12a8 8 0 018-8v4l3.5-3.5L12 1V0a10 10 0 00-10 10h2z"
                                                 ></path>
                                             </svg>
-                                            Updating...
+                                            Saving...
                                         </div>
                                     ) : (
                                         <>
-                                            Update
+                                            Save
                                             <span className="flex h-5 w-5 items-center justify-center ml-1">
                                                 <CloudUpload className="stroke-1.5 h-4 w-4" />
                                             </span>
@@ -334,12 +316,13 @@ const EditEmployee = () => {
                             <div className="relative mt-6 rounded-md border border-warning bg-warning/20 p-5 dark:border-0 dark:bg-darkmode-600">
                                 <Lightbulb className="stroke-1.5 absolute right-0 top-0 mr-3 mt-5 h-12 w-12 text-warning/80" />
                                 <h2 className="text-lg font-medium">Tips</h2>
-                                <div className="mt-5 font-medium">Editing Employee</div>
+                                <div className="mt-5 font-medium">Hiring</div>
                                 <div className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-500">
                                     <div>
-                                        Make sure to keep the Finger ID unique if you change it.
-                                        Double check the phone number, salary, and position
-                                        for accuracy before updating.
+                                        Provide correct details to ensure the system
+                                        accurately manages attendance and payroll.
+                                        Double-check salary, finger ID, and phone number
+                                        for accuracy before saving.
                                     </div>
                                 </div>
                             </div>
@@ -348,7 +331,7 @@ const EditEmployee = () => {
                 </div>
             </form>
         </>
-    )
-}
+    );
+};
 
-export default EditEmployee
+export default EditEmployee;
