@@ -11,7 +11,6 @@ const EditEmployee = () => {
     // Track form inputs and loading state
     const [formData, setFormData] = useState({
         name: '',
-        finger_id: '',
         gender: '',
         phone: '',
         position: '',
@@ -27,7 +26,6 @@ const EditEmployee = () => {
                 const response = await fetchEmployee(empId);
                 setFormData({
                     name: response.data.name,
-                    finger_id: response.data.finger_id,
                     gender: response.data.gender,
                     phone: response.data.phone,
                     position: response.data.position,
@@ -58,10 +56,9 @@ const EditEmployee = () => {
 
     // Validate required fields
     const validateForm = () => {
-        const { name, finger_id, gender, phone, position, salary } = formData;
+        const { name, gender, phone, position, salary } = formData;
         if (
             !name.trim() ||
-            !finger_id.trim() ||
             !gender ||
             !phone.trim() ||
             !position ||
@@ -89,7 +86,6 @@ const EditEmployee = () => {
             employeeData.append('gender', formData.gender);
             employeeData.append('position', formData.position);
             employeeData.append('salary', formData.salary);
-            employeeData.append('finger_id', formData.finger_id);
 
             // If image exists, append it to FormData
             if (formData.image) {
@@ -157,14 +153,6 @@ const EditEmployee = () => {
                                                 name="name"
                                                 placeholder="Enter Employee Name"
                                                 value={formData.name}
-                                                onChange={handleChange}
-                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
-                                            />
-                                            <input
-                                                type="number"
-                                                name="finger_id"
-                                                placeholder="Finger ID"
-                                                value={formData.finger_id}
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
