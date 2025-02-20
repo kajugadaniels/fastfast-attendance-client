@@ -206,11 +206,7 @@ const GetEmployees = () => {
                         }}
                     >
                         <option value="">All Departments</option>
-                        <option value="HR">HR</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Engineering">Engineering</option>
-                        <option value="Administration">Administration</option>
-                        {/* ... add more if needed */}
+                        <option value="Construction">Construction</option>
                     </select>
 
                     {/* Date Range Filter: Start */}

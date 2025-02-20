@@ -10,7 +10,6 @@ const AddEmployee = () => {
     // Track form inputs and loading state
     const [formData, setFormData] = useState({
         name: '',
-        finger_id: '',
         gender: '',
         phone: '',
         position: '',
@@ -35,10 +34,9 @@ const AddEmployee = () => {
 
     // Validate required fields
     const validateForm = () => {
-        const { name, finger_id, gender, phone, position, salary } = formData
+        const { name, gender, phone, position, salary } = formData
         if (
             !name.trim() ||
-            !finger_id.trim() ||
             !gender ||
             !phone.trim() ||
             !position ||
@@ -66,7 +64,6 @@ const AddEmployee = () => {
             employeeData.append('gender', formData.gender)
             employeeData.append('position', formData.position)
             employeeData.append('salary', formData.salary)
-            employeeData.append('finger_id', formData.finger_id)
 
             // If image exists, append it to FormData
             if (formData.image) {
@@ -130,20 +127,12 @@ const AddEmployee = () => {
                                                 </div>
                                             </div>
                                         </label>
-                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-3 gap-3">
+                                        <div className="mt-3 w-full flex-1 xl:mt-0 grid grid-cols-2 gap-3">
                                             <input
                                                 type="text"
                                                 name="name"
                                                 placeholder="Enter Employee Name"
                                                 value={formData.name}
-                                                onChange={handleChange}
-                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
-                                            />
-                                            <input
-                                                type="number"
-                                                name="finger_id"
-                                                placeholder="Finger ID"
-                                                value={formData.finger_id}
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
@@ -217,11 +206,7 @@ const AddEmployee = () => {
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             >
                                                 <option value="">Select Position</option>
-                                                <option value="Manager">Manager</option>
-                                                <option value="Engineer">Engineer</option>
-                                                <option value="Accountant">Accountant</option>
-                                                <option value="Administration">Administration</option>
-                                                {/* Add more positions as needed */}
+                                                <option value="Construction">Construction</option>
                                             </select>
                                             <input
                                                 type="number"
