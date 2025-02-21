@@ -177,6 +177,15 @@ export const createFoodMenu = async (foodMenuData) => {
     }
 };
 
+export const fetchFoodMenu = async (foodMenuId) => {
+    try {
+        const response = await apiClient.get(`/food-menu/${foodMenuId}/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const fetchAttendances = async () => {
     try {
         const response = await apiClient.get('/attendance/');
