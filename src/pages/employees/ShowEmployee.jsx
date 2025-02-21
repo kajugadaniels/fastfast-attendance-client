@@ -18,6 +18,8 @@ const ShowEmployee = () => {
     const [dateEnd, setDateEnd] = useState('');
     const [sortOption, setSortOption] = useState('dateDesc');
     const [message, setMessage] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false); // State for controlling modal visibility
+    const [selectedFoodMenu, setSelectedFoodMenu] = useState(null); // State for selected food menu
     const qrCodeRef = useRef(); // This ref is for the QR Code
 
     const pageSize = 10;
@@ -54,14 +56,12 @@ const ShowEmployee = () => {
     };
 
     const handleAttendanceSubmit = async () => {
-        // Open a simple JavaScript window with all food menu options
-        const foodMenuOptions = foodMenus.map((menu, index) => `${index + 1}. ${menu.name} - ${menu.price} RWF`).join('\n');
-        const selectedMenuIndex = prompt(`Select a food menu (1-${foodMenus.length}):\n\n${foodMenuOptions}`);
-        
-        if (selectedMenuIndex && !isNaN(selectedMenuIndex) && selectedMenuIndex >= 1 && selectedMenuIndex <= foodMenus.length) {
-            const selectedFoodMenu = foodMenus[selectedMenuIndex - 1]; // Get the selected food menu
+        if (selectedFoodMenu) {
             try {
-                const response = await addAttendance({ finger_id: employeeData.employee.finger_id, food_menu: selectedFoodMenu.id });
+                const response = await addAttendance({
+                    finger_id: employeeData.employee.finger_id,
+                    food_menu: selectedFoodMenu.id,
+                });
                 if (response && response.message) {
                     const successMessage = response.message.detail;
                     setMessage(successMessage);
@@ -72,6 +72,9 @@ const ShowEmployee = () => {
                         ...employeeData,
                         attendance_history: [...employeeData.attendance_history, response.data],
                     });
+
+                    // Close the modal after successful attendance submission
+                    setIsModalOpen(false);
                 }
             } catch (error) {
                 const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
@@ -79,7 +82,7 @@ const ShowEmployee = () => {
                 toast.error(errorMessage);
             }
         } else {
-            toast.error('Invalid food menu selection.');
+            toast.error('Please select a food menu.');
         }
     };
 
@@ -334,10 +337,44 @@ const ShowEmployee = () => {
                 </button>
             </div>
 
+            {/* Modal for food menu selection */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 flex items-center justify-center">
+                    <div className="bg-white p-6 rounded-md shadow-md w-96">
+                        <h3 className="text-xl font-semibold mb-4">Select Food Menu</h3>
+                        <ul className="space-y-3">
+                            {foodMenus.map((menu) => (
+                                <li
+                                    key={menu.id}
+                                    className="cursor-pointer hover:bg-gray-200 px-3 py-2 rounded-md"
+                                    onClick={() => setSelectedFoodMenu(menu)}
+                                >
+                                    {menu.name} - {menu.price} RWF
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="mt-4 flex justify-end gap-4">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAttendanceSubmit}
+                                className="btn-primary"
+                            >
+                                Submit Attendance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Actions */}
             <div className="flex justify-end gap-4 mt-6">
                 <button
-                    onClick={handleAttendanceSubmit}
+                    onClick={() => setIsModalOpen(true)} // Open the modal on button click
                     className="btn-primary"
                 >
                     Record Today's Attendance
