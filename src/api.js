@@ -195,6 +195,15 @@ export const updateFoodMenu = async (foodMenuId, foodMenuData) => {
     }
 };
 
+export const deleteFoodMenu = async (foodMenuId) => {
+    try {
+        const response = await apiClient.delete(`/food-menu/${foodMenuId}/delete/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const fetchAttendances = async () => {
     try {
         const response = await apiClient.get('/attendance/');
