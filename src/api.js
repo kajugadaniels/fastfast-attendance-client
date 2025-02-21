@@ -186,6 +186,15 @@ export const fetchFoodMenu = async (foodMenuId) => {
     }
 };
 
+export const updateFoodMenu = async (foodMenuId, foodMenuData) => {
+    try {
+        const response = await apiClient.patch(`/food-menu/${foodMenuId}/edit/`, foodMenuData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const fetchAttendances = async () => {
     try {
         const response = await apiClient.get('/attendance/');
