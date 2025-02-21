@@ -1,5 +1,5 @@
 import React from 'react'
-import { House, Speaker, UsersRound } from 'lucide-react'
+import { CookingPot, House, Speaker, UsersRound } from 'lucide-react'
 import { useLocation, NavLink } from 'react-router-dom'
 
 const Sidebar = () => {
@@ -7,6 +7,7 @@ const Sidebar = () => {
 
     // Check active state for each sidebar item.
     const isDashboardActive = pathname === '/dashboard'
+    const isFoodMenuActive = pathname.startsWith('/food-menus') || pathname.startsWith('/food-menu')
     const isEmployeesActive = pathname.startsWith('/employees') || pathname.startsWith('/employee')
     const isAttendanceActive = pathname === '/attendance'
 
@@ -33,6 +34,19 @@ const Sidebar = () => {
                             <House className="stroke-1.5 w-5 h-5" />
                         </div>
                         <div className="side-menu__title">Dashboard</div>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink
+                        to="/food-menus"
+                        className={() =>
+                            `side-menu ${isFoodMenuActive ? 'side-menu--active' : ''}`
+                        }
+                    >
+                        <div className="side-menu__icon">
+                            <CookingPot className="stroke-1.5 w-5 h-5" />
+                        </div>
+                        <div className="side-menu__title">Food Menus</div>
                     </NavLink>
                 </li>
                 <li>
