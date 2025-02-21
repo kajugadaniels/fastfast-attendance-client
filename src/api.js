@@ -159,6 +159,15 @@ export const deleteEmployee = async (empId) => {
     }
 };
 
+export const fetchFoodMenus = async () => {
+    try {
+        const response = await apiClient.get('/food-menus/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const fetchAttendances = async () => {
     try {
         const response = await apiClient.get('/attendance/');
