@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import QRCode from 'react-qr-code';
-import { addAttendance, fetchEmployee } from '../../api';
+import { addAttendance, fetchEmployee, fetchFoodMenus } from '../../api';
 import { Eye, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toPng } from 'html-to-image'; // Ensure this import is here
 
@@ -11,6 +11,7 @@ const ShowEmployee = () => {
     const navigate = useNavigate();
 
     const [employeeData, setEmployeeData] = useState(null);
+    const [foodMenus, setFoodMenus] = useState([]); // State to hold the food menu options
     const [loading, setLoading] = useState(true);
     const [attendanceStatus, setAttendanceStatus] = useState('');
     const [dateStart, setDateStart] = useState('');
@@ -35,6 +36,17 @@ const ShowEmployee = () => {
             }
         };
         getEmployeeDetails();
+
+        // Fetch the food menus when the component mounts
+        const getFoodMenus = async () => {
+            try {
+                const res = await fetchFoodMenus();
+                setFoodMenus(res.data);
+            } catch (error) {
+                toast.error('Failed to load food menus.');
+            }
+        };
+        getFoodMenus();
     }, [id]);
 
     const handleGoBack = () => {
@@ -42,23 +54,32 @@ const ShowEmployee = () => {
     };
 
     const handleAttendanceSubmit = async () => {
-        try {
-            const response = await addAttendance({ finger_id: employeeData.employee.finger_id });
-            if (response && response.message) {
-                const successMessage = response.message.detail;
-                setMessage(successMessage);
-                toast.success(successMessage);
+        // Open a simple JavaScript window with all food menu options
+        const foodMenuOptions = foodMenus.map((menu, index) => `${index + 1}. ${menu.name} - ${menu.price} RWF`).join('\n');
+        const selectedMenuIndex = prompt(`Select a food menu (1-${foodMenus.length}):\n\n${foodMenuOptions}`);
+        
+        if (selectedMenuIndex && !isNaN(selectedMenuIndex) && selectedMenuIndex >= 1 && selectedMenuIndex <= foodMenus.length) {
+            const selectedFoodMenu = foodMenus[selectedMenuIndex - 1]; // Get the selected food menu
+            try {
+                const response = await addAttendance({ finger_id: employeeData.employee.finger_id, food_menu: selectedFoodMenu.id });
+                if (response && response.message) {
+                    const successMessage = response.message.detail;
+                    setMessage(successMessage);
+                    toast.success(successMessage);
 
-                // Update the employee data with new attendance history
-                setEmployeeData({
-                    ...employeeData,
-                    attendance_history: [...employeeData.attendance_history, response.data],
-                });
+                    // Update the employee data with new attendance history
+                    setEmployeeData({
+                        ...employeeData,
+                        attendance_history: [...employeeData.attendance_history, response.data],
+                    });
+                }
+            } catch (error) {
+                const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
+                setMessage(errorMessage);
+                toast.error(errorMessage);
             }
-        } catch (error) {
-            const errorMessage = error.response?.data?.message?.detail || 'Failed to record attendance.';
-            setMessage(errorMessage);
-            toast.error(errorMessage);
+        } else {
+            toast.error('Invalid food menu selection.');
         }
     };
 
