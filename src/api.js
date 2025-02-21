@@ -168,6 +168,15 @@ export const fetchFoodMenus = async () => {
     }
 };
 
+export const createFoodMenu = async (foodMenuData) => {
+    try {
+        const response = await apiClient.post('/food-menu/add/', foodMenuData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const fetchAttendances = async () => {
     try {
         const response = await apiClient.get('/attendance/');
