@@ -31,7 +31,7 @@ const GetFoodMenus = () => {
     };
 
     const handleEditFoodMenu = (menuId) => {
-        navigate(`/food-menu/${menuId}/edit`);
+        navigate(`/food-menu/edit/${menuId}`);
     };
 
     const handleDeleteFoodMenu = async (menuId) => {
