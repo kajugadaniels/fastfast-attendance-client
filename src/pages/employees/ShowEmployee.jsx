@@ -87,7 +87,7 @@ const ShowEmployee = () => {
     };
 
     // QR Code generation logic using employee_id
-    const qrCodeValue = `https://nexcode-attendance.vercel.app/employee/${employeeData?.employee?.id}/details`;
+    const qrCodeValue = `https://www.fastfast.nexcodes.dev/employee/${employeeData?.employee?.id}/details`;
 
     const downloadQRCode = () => {
         if (qrCodeRef.current) {
