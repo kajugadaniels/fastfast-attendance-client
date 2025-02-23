@@ -53,16 +53,11 @@ const EditEmployee = () => {
         }
     };
 
+    // Validate only required fields: name and phone
     const validateForm = () => {
-        const { name, phone, gender, position, salary } = formData;
-        if (
-            !name.trim() ||
-            !phone.trim() ||
-            !gender.trim() ||
-            !position.trim() ||
-            !salary.toString().trim()
-        ) {
-            toast.error('Please fill in all required fields.');
+        const { name, phone } = formData;
+        if (!name.trim() || !phone.trim()) {
+            toast.error('Name and phone are required.');
             return false;
         }
         return true;
@@ -118,11 +113,11 @@ const EditEmployee = () => {
                                                 <div className="flex items-center">
                                                     <div className="font-medium">Name & Image</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
-                                                        Required
+                                                        * Required for Name
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Please enter the employee’s full name and upload an image.
+                                                    Please enter the employee’s full name. Image is optional.
                                                 </div>
                                             </div>
                                         </label>
@@ -139,7 +134,7 @@ const EditEmployee = () => {
                                                 type="file"
                                                 name="image"
                                                 onChange={handleImageChange}
-                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
+                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
                                         </div>
                                     </div>
@@ -151,11 +146,11 @@ const EditEmployee = () => {
                                                 <div className="flex items-center">
                                                     <div className="font-medium">Gender & Phone Number</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
-                                                        Required
+                                                        * Required for Phone
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Provide the employee's gender and valid phone number.
+                                                    Provide the employee's phone number. Gender is optional.
                                                 </div>
                                             </div>
                                         </label>
@@ -166,7 +161,7 @@ const EditEmployee = () => {
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             >
-                                                <option value="">Select Gender</option>
+                                                <option value="">Select Gender (optional)</option>
                                                 <option value="M">Male</option>
                                                 <option value="F">Female</option>
                                                 <option value="O">Other</option>
@@ -182,18 +177,18 @@ const EditEmployee = () => {
                                         </div>
                                     </div>
 
-                                    {/* Group 3: Position & Salary */}
+                                    {/* Group 3: Position & Salary (Optional) */}
                                     <div className="block sm:flex group form-inline mt-5 flex-col items-start pt-5 xl:flex-row">
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
                                                     <div className="font-medium">Position & Salary</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
-                                                        Required
+                                                        Optional
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Specify the employee’s position and monthly salary.
+                                                    Specify the employee’s position and monthly salary if applicable.
                                                 </div>
                                             </div>
                                         </label>
@@ -204,13 +199,13 @@ const EditEmployee = () => {
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             >
-                                                <option value="">Select Position</option>
+                                                <option value="">Select Position (optional)</option>
                                                 <option value="Construction">Construction</option>
                                             </select>
                                             <input
                                                 type="number"
                                                 name="salary"
-                                                placeholder="Enter Employee Salary"
+                                                placeholder="Enter Employee Salary (optional)"
                                                 value={formData.salary}
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
@@ -282,7 +277,7 @@ const EditEmployee = () => {
                                 <div className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-500">
                                     <div>
                                         Provide correct details to ensure the system accurately manages attendance and payroll.
-                                        Double-check salary, and phone number for accuracy before saving.
+                                        Only name and phone are required for updating an employee.
                                     </div>
                                 </div>
                             </div>
