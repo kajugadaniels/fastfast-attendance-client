@@ -223,10 +223,6 @@ const GetAttendances = () => {
                     >
                         <option value="">All Positions</option>
                         <option value="Construction">Construction</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Finance">Finance</option>
-                        <option value="HR">HR</option>
-                        {/* Add more if needed */}
                     </select>
                 </div>
 
