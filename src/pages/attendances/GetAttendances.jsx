@@ -18,13 +18,14 @@ const GetAttendances = () => {
 
     // Filters & search
     const [searchTerm, setSearchTerm] = useState('')
-    const [attendanceFilter, setAttendanceFilter] = useState('')
+    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent" filter for today's record
     const [genderFilter, setGenderFilter] = useState('')
     const [positionFilter, setPositionFilter] = useState('')
-    const [attendanceDateFilter, setAttendanceDateFilter] = useState('')
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
     const [foodMenuFilter, setFoodMenuFilter] = useState('')
 
-    // For food menu filtering – retrieve all available food menus
+    // Retrieve food menus for filtering options
     const [foodMenus, setFoodMenus] = useState([])
 
     // Pagination
@@ -39,7 +40,7 @@ const GetAttendances = () => {
         return d
     })
 
-    // Fetch attendance records (which now include complete history)
+    // Fetch attendance records (complete history)
     useEffect(() => {
         const fetchAttendance = async () => {
             try {
@@ -62,7 +63,7 @@ const GetAttendances = () => {
         fetchAttendance()
     }, [])
 
-    // Fetch all food menus for filtering
+    // Fetch food menus for filtering
     useEffect(() => {
         const fetchFoodMenusData = async () => {
             try {
@@ -86,10 +87,12 @@ const GetAttendances = () => {
             emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp.phone.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // Filter by today's attendance status if specified
-        const matchesAttendance = attendanceFilter
-            ? emp.attendance_status === attendanceFilter
-            : true
+        // Compute today's attendance status from attendance_history
+        const todayStr = new Date().toISOString().split('T')[0]
+        const todayRecord =
+            (emp.attendance_history || []).find(hist => hist.attendance_date === todayStr) || {}
+        const todayStatus = todayRecord.attendance_status || "Absent"
+        const matchesAttendance = attendanceFilter ? todayStatus === attendanceFilter : true
 
         // Filter by gender
         let matchesGender = true
@@ -104,32 +107,35 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
-        // Filter by attendance date in history (if a date is selected)
+        // Filter by date range: Check if at least one attendance record falls within the range.
         let matchesDateRange = true
-        if (attendanceDateFilter) {
-            if (
-                !((emp.attendance_history || []).some(
-                    hist => hist.attendance_date === attendanceDateFilter
-                ))
-            ) {
-                matchesDateRange = false
-            }
+        if (startDate) {
+            const start = new Date(startDate)
+            const hasRecord = (emp.attendance_history || []).some(
+                hist => new Date(hist.attendance_date) >= start
+            )
+            if (!hasRecord) matchesDateRange = false
+        }
+        if (endDate) {
+            const end = new Date(endDate)
+            end.setHours(23, 59, 59, 999)
+            const hasRecord = (emp.attendance_history || []).some(
+                hist => new Date(hist.attendance_date) <= end
+            )
+            if (!hasRecord) matchesDateRange = false
         }
 
-        // Filter by food menu (if selected)
+        // Filter by food menu: Check if any attendance record has a food_menu with the given name.
         let matchesFoodMenu = true
         if (foodMenuFilter) {
             const history = emp.attendance_history || []
-            if (
-                !history.some(
-                    hist =>
-                        hist.food_menu &&
-                        hist.food_menu.name &&
-                        hist.food_menu.name.toLowerCase() === foodMenuFilter.toLowerCase()
-                )
-            ) {
-                matchesFoodMenu = false
-            }
+            const hasFoodMenu = history.some(
+                hist =>
+                    hist.food_menu &&
+                    hist.food_menu.name &&
+                    hist.food_menu.name.toLowerCase() === foodMenuFilter.toLowerCase()
+            )
+            if (!hasFoodMenu) matchesFoodMenu = false
         }
 
         return (
@@ -169,7 +175,8 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  Determine attendance for a given day by looking up the history
+    //  Determine attendance for a given day by looking up the history.
+    //  Returns an object: { status, time } for that day.
     // --------------------------------------
     const getDayStatus = (emp, dayIndex) => {
         const thatDay = daysArray[dayIndex]
@@ -216,7 +223,7 @@ const GetAttendances = () => {
                         <Search className="stroke-1.5 absolute inset-y-0 right-0 my-auto mr-3 h-4 w-4" />
                     </div>
 
-                    {/* Attendance Status Filter */}
+                    {/* Attendance Status Filter (for today's record) */}
                     <select
                         value={attendanceFilter}
                         onChange={e => {
@@ -258,14 +265,24 @@ const GetAttendances = () => {
                         <option value="Construction">Construction</option>
                     </select>
 
-                    {/* Attendance Date Filter */}
+                    {/* Date Range Filters */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-slate-700">Date:</span>
+                        <span className="text-sm text-slate-700">From:</span>
                         <input
                             type="date"
-                            value={attendanceDateFilter}
+                            value={startDate}
                             onChange={e => {
-                                setAttendanceDateFilter(e.target.value)
+                                setStartDate(e.target.value)
+                                setCurrentPage(1)
+                            }}
+                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                        />
+                        <span className="text-sm text-slate-700">To:</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={e => {
+                                setEndDate(e.target.value)
                                 setCurrentPage(1)
                             }}
                             className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
