@@ -1,40 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { fetchFoodMenu, updateFoodMenu } from '../../api';
 import { toast } from 'react-toastify';
-import { CloudUpload, ChevronLeft } from 'lucide-react';
+import { CloudUpload } from 'lucide-react';
 
 const EditFoodMenu = () => {
-    const { foodMenuId } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        name: '',
-        price: '',
-    });
-    const [loading, setLoading] = useState(false);
-    const [initialLoading, setInitialLoading] = useState(true);
+    const [formData, setFormData] = useState({ name: '', price: '' });
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
 
     useEffect(() => {
-        const loadFoodMenu = async () => {
+        const getFoodMenuDetails = async () => {
             try {
-                setInitialLoading(true);
-                const data = await fetchFoodMenu(foodMenuId);
-                setFormData({
-                    name: data.name || '',
-                    price: data.price || '',
-                });
+                setLoading(true);
+                const response = await fetchFoodMenu(id);
+                if (response.data) {
+                    setFormData({
+                        name: response.data.name || '',
+                        price: response.data.price || '',
+                    });
+                }
             } catch (error) {
-                toast.error('Error fetching food menu details.');
+                toast.error('Failed to load food menu details.');
             } finally {
-                setInitialLoading(false);
+                setLoading(false);
             }
         };
-        loadFoodMenu();
-    }, [foodMenuId]);
+        getFoodMenuDetails();
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const validateForm = () => {
@@ -50,84 +49,78 @@ const EditFoodMenu = () => {
         e.preventDefault();
         if (!validateForm()) return;
         try {
-            setLoading(true);
-            await updateFoodMenu(foodMenuId, formData);
-            toast.success('Food menu updated successfully.');
+            setUpdating(true);
+            await updateFoodMenu(id, formData);
+            toast.success('Food menu updated successfully');
             navigate('/food-menus');
         } catch (error) {
             toast.error('Error updating food menu.');
         } finally {
-            setLoading(false);
+            setUpdating(false);
         }
     };
+
+    if (loading) {
+        return <div className="text-center py-10">Loading food menu details...</div>;
+    }
 
     return (
         <div className="container mx-auto p-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-medium">Edit Food Menu</h2>
-                <button
-                    onClick={() => navigate('/food-menus')}
-                    className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-secondary border-secondary text-white dark:border-secondary mr-2 shadow-md"
-                >
-                    <ChevronLeft className="stroke-1.5 h-4 w-4 mr-1" />
+                <button onClick={() => navigate('/food-menus')} className="btn-secondary">
                     Go Back
                 </button>
             </div>
-            {initialLoading ? (
-                <div className="text-center py-10">Loading food menu details...</div>
-            ) : (
-                <form onSubmit={handleUpdateFoodMenu} className="mt-5">
+            <form onSubmit={handleUpdateFoodMenu}>
+                <div className="mt-5">
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Name
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Name</label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className="input-field mt-1 block w-full"
-                            placeholder="Enter food menu name"
+                            className="input-field"
+                            placeholder="Enter food name"
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Price
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Price</label>
                         <input
                             type="number"
                             name="price"
                             value={formData.price}
                             onChange={handleChange}
-                            className="input-field mt-1 block w-full"
-                            placeholder="Enter food menu price"
+                            className="input-field"
+                            placeholder="Enter food price"
                         />
                     </div>
                     <div className="flex gap-4">
                         <button
                             type="button"
                             onClick={() => navigate('/food-menus')}
-                            className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-secondary border-secondary text-white dark:border-secondary shadow-md"
+                            className="btn-secondary"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            disabled={loading}
-                            className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white dark:border-primary shadow-md"
+                            disabled={updating}
+                            className="btn-primary"
                         >
-                            {loading ? (
-                                'Updating...'
+                            {updating ? (
+                                <span>Updating...</span>
                             ) : (
-                                <>
+                                <span>
                                     Update
                                     <CloudUpload className="h-4 w-4 ml-1" />
-                                </>
+                                </span>
                             )}
                         </button>
                     </div>
-                </form>
-            )}
+                </div>
+            </form>
         </div>
     );
 };
