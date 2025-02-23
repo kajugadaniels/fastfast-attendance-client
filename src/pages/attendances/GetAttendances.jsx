@@ -36,14 +36,16 @@ const GetAttendances = () => {
         return d
     })
 
+    // Expanded rows to show past attendance history
+    const [expandedRows, setExpandedRows] = useState([])
+
     useEffect(() => {
         const fetchAttendance = async () => {
             try {
                 setLoading(true)
                 const res = await fetchAttendances()
                 if (res.data) {
-                    // Each record typically has: 
-                    // { employee_id, name, phone, position, attendance_status, date, ... }
+                    // Expect each record to include attendance_history array along with other attributes.
                     setAttendanceData(res.data)
                 }
             } catch (err) {
@@ -69,7 +71,7 @@ const GetAttendances = () => {
             emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp.phone.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // 2) Filter by attendance status (Present/Absent) for today's status
+        // 2) Attendance Status filter
         const matchesAttendance = attendanceFilter
             ? emp.attendance_status === attendanceFilter
             : true
@@ -87,14 +89,14 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
-        // 5) Date range filter – assume each record has a `date` field (ISO string)
+        // 5) Date range filter – if the record contains a date attribute (optional)
         let matchesDateRange = true
-        if (startDate) {
+        if (startDate && emp.date) {
             const empDate = new Date(emp.date)
             const start = new Date(startDate)
             if (empDate < start) matchesDateRange = false
         }
-        if (endDate) {
+        if (endDate && emp.date) {
             const empDate = new Date(emp.date)
             const end = new Date(endDate)
             if (empDate > end) matchesDateRange = false
@@ -128,6 +130,14 @@ const GetAttendances = () => {
         navigate(`/employee/${employee_id}`)
     }
 
+    const toggleHistory = (employee_id) => {
+        setExpandedRows(prev =>
+            prev.includes(employee_id)
+                ? prev.filter(id => id !== employee_id)
+                : [...prev, employee_id]
+        )
+    }
+
     // --------------------------------------
     //  Helper: Format Date
     // --------------------------------------
@@ -136,7 +146,8 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  For each day in [past2..today..future4], figure out an Attendance display
+    //  For each day in the 7-day window, determine the attendance display.
+    //  For today's column (offset 0), display the time_in (if available) below the status.
     // --------------------------------------
     const getDayStatus = (employee, dayIndex) => {
         const thatDay = daysArray[dayIndex]
@@ -286,70 +297,118 @@ const GetAttendances = () => {
                                     <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
                                         Action
                                     </th>
+                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
+                                        History
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedData.map((emp, idx) => (
-                                    <tr key={idx} className="intro-x">
-                                        <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <input
-                                                type="checkbox"
-                                                className="transition-all duration-100 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
-                                            />
-                                        </td>
-                                        <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <div className="flex items-center">
-                                                <div className="image-fit zoom-in h-9 w-9">
-                                                    {/* Placeholder image */}
-                                                    <img
-                                                        src="https://midone-html.left4code.com/dist/images/fakers/preview-6.jpg"
-                                                        className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
-                                                        alt="employee avatar"
-                                                    />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <span className="whitespace-nowrap font-medium">
-                                                        {emp.name}
-                                                    </span>
-                                                    <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
-                                                        ID: {emp.employee_id}
+                                    <React.Fragment key={emp.employee_id}>
+                                        <tr className="intro-x">
+                                            <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                <input
+                                                    type="checkbox"
+                                                    className="transition-all duration-100 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
+                                                />
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                <div className="flex items-center">
+                                                    <div className="image-fit zoom-in h-9 w-9">
+                                                        <img
+                                                            src="https://midone-html.left4code.com/dist/images/fakers/preview-6.jpg"
+                                                            className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
+                                                            alt="employee avatar"
+                                                        />
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <span className="whitespace-nowrap font-medium">
+                                                            {emp.name}
+                                                        </span>
+                                                        <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
+                                                            ID: {emp.employee_id}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        {/* For each of the 7 days, show a status cell */}
-                                        {daysArray.map((d, dayIdx) => {
-                                            const status = getDayStatus(emp, dayIdx) // "Present", "Absent", "No Data", "Future"
-                                            let bgColor = 'bg-slate-400'
-                                            if (status === 'Present') bgColor = 'bg-success'
-                                            else if (status === 'Absent' || status === 'No Data') bgColor = 'bg-danger'
-                                            else if (status === 'Future') bgColor = 'bg-warning'
-
-                                            return (
-                                                <td
-                                                    key={dayIdx}
-                                                    className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600"
-                                                >
-                                                    <span
-                                                        className={`px-3 py-1 inline-block rounded-full text-xs text-white ${bgColor}`}
+                                            </td>
+                                            {/* For each of the 7 days, show a status cell.
+                                                For today's column (offset 0), also display the time_in if available */}
+                                            {daysArray.map((d, dayIdx) => {
+                                                const status = getDayStatus(emp, dayIdx)
+                                                let bgColor = 'bg-slate-400'
+                                                if (status === 'Present') bgColor = 'bg-success'
+                                                else if (status === 'Absent' || status === 'No Data') bgColor = 'bg-danger'
+                                                else if (status === 'Future') bgColor = 'bg-warning'
+                                                
+                                                return (
+                                                    <td
+                                                        key={dayIdx}
+                                                        className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600"
                                                     >
-                                                        {status}
-                                                    </span>
-                                                </td>
-                                            )
-                                        })}
-                                        <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <div className="flex items-center justify-center">
+                                                        <span
+                                                            className={`px-3 py-1 inline-block rounded-full text-xs text-white ${bgColor}`}
+                                                        >
+                                                            {status}
+                                                        </span>
+                                                        {dayOffsets[dayIdx] === 0 && emp.time_in && (
+                                                            <div className="text-xs mt-1">{emp.time_in}</div>
+                                                        )}
+                                                    </td>
+                                                )
+                                            })}
+                                            <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                <div className="flex items-center justify-center">
+                                                    <button
+                                                        className="mr-3 flex items-center text-blue-600"
+                                                        onClick={() => handleShowEmployee(emp.employee_id)}
+                                                    >
+                                                        <Eye className="stroke-1.5 mr-1 h-4 w-4" />
+                                                        View
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-300 box w-32 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600 text-center">
                                                 <button
-                                                    className="mr-3 flex items-center text-blue-600"
-                                                    onClick={() => handleShowEmployee(emp.employee_id)}
+                                                    onClick={() => toggleHistory(emp.employee_id)}
+                                                    className="text-sm text-primary hover:underline"
                                                 >
-                                                    <Eye className="stroke-1.5 mr-1 h-4 w-4" />
-                                                    View
+                                                    {expandedRows.includes(emp.employee_id) ? "Hide History" : "View History"}
                                                 </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
+                                        {expandedRows.includes(emp.employee_id) && emp.attendance_history && emp.attendance_history.length > 0 && (
+                                            <tr className="bg-gray-100 dark:bg-darkmode-600">
+                                                <td colSpan={8} className="px-5 py-3">
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-left">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="font-medium px-3 py-2">Date</th>
+                                                                    <th className="font-medium px-3 py-2">Time In</th>
+                                                                    <th className="font-medium px-3 py-2">Status</th>
+                                                                    <th className="font-medium px-3 py-2">Food Menu</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {emp.attendance_history.map((hist, hIdx) => (
+                                                                    <tr key={hIdx} className="border-b dark:border-gray-700">
+                                                                        <td className="px-3 py-2">{hist.attendance_date}</td>
+                                                                        <td className="px-3 py-2">{hist.time_in || "N/A"}</td>
+                                                                        <td className="px-3 py-2">{hist.attendance_status}</td>
+                                                                        <td className="px-3 py-2">
+                                                                            {hist.food_menu 
+                                                                                ? `${hist.food_menu.name} - ${hist.food_menu.price}`
+                                                                                : "N/A"}
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
                                 ))}
                             </tbody>
                         </table>
@@ -379,14 +438,12 @@ const GetAttendances = () => {
                                         <ChevronLeft className="stroke-1.5 h-4 w-4" />
                                     </button>
                                 </li>
-
                                 {/* Page indicator */}
                                 <li>
                                     <span className="px-3 py-2 text-slate-700 dark:text-slate-300">
                                         Page {currentPage} of {totalPages}
                                     </span>
                                 </li>
-
                                 <li>
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
