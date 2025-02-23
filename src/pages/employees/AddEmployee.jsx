@@ -14,7 +14,7 @@ const AddEmployee = () => {
         phone: '',
         position: '',
         salary: '',
-        image: null  // Add image field here
+        image: null  // Image is optional
     })
     const [loading, setLoading] = useState(false)
 
@@ -32,17 +32,11 @@ const AddEmployee = () => {
         }
     }
 
-    // Validate required fields
+    // Validate only the required fields: name and phone
     const validateForm = () => {
-        const { name, gender, phone, position, salary } = formData
-        if (
-            !name.trim() ||
-            !gender ||
-            !phone.trim() ||
-            !position ||
-            !salary.trim()
-        ) {
-            toast.error('Please fill in all required fields.')
+        const { name, phone } = formData
+        if (!name.trim() || !phone.trim()) {
+            toast.error('Name and phone are required.')
             return false
         }
         return true
@@ -70,9 +64,7 @@ const AddEmployee = () => {
                 employeeData.append('image', formData.image)
             }
 
-            const response = await createEmployee(employeeData)
-
-            // If backend returns { data: {...}, message: {...} }, adjust accordingly
+            await createEmployee(employeeData)
             toast.success('Employee created successfully.')
             navigate('/employees')
         } catch (error) {
@@ -94,7 +86,7 @@ const AddEmployee = () => {
                 </h2>
                 <a
                     href='/employees'
-                    className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 bg-primary border-primary text-white dark:border-primary mr-2 shadow-md"
+                    className="transition duration-200 border inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white dark:border-primary mr-2 shadow-md"
                 >
                     Go Back
                     <span className="flex h-5 w-5 items-center justify-center">
@@ -112,18 +104,18 @@ const AddEmployee = () => {
                                     Add New Employee
                                 </div>
                                 <div className="mt-5">
-                                    {/* Name & Finger ID */}
+                                    {/* Group 1: Name & Image */}
                                     <div className="block sm:flex group form-inline mt-5 flex-col items-start pt-5 xl:flex-row">
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
-                                                    <div className="font-medium">Name & Finger ID & Image</div>
+                                                    <div className="font-medium">Name & Image</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
-                                                        Required
+                                                        * Required for Name
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Please enter the employee’s full name and a unique finger ID and employee’s profile image.
+                                                    Please enter the employee’s full name. Image is optional.
                                                 </div>
                                             </div>
                                         </label>
@@ -140,23 +132,23 @@ const AddEmployee = () => {
                                                 type="file"
                                                 name="image"
                                                 onChange={handleImageChange}
-                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
+                                                className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Gender & Phone Number */}
+                                    {/* Group 2: Gender & Phone Number */}
                                     <div className="block sm:flex group form-inline mt-5 flex-col items-start pt-5 xl:flex-row">
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
                                                     <div className="font-medium">Gender & Phone Number</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
-                                                        Required
+                                                        * Required for Phone
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Provide the employee's gender and valid phone number.
+                                                    Provide a valid phone number. Gender is optional.
                                                 </div>
                                             </div>
                                         </label>
@@ -167,7 +159,7 @@ const AddEmployee = () => {
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             >
-                                                <option value="">Select Gender</option>
+                                                <option value="">Select Gender (optional)</option>
                                                 <option value="M">Male</option>
                                                 <option value="F">Female</option>
                                                 <option value="O">Other</option>
@@ -183,18 +175,18 @@ const AddEmployee = () => {
                                         </div>
                                     </div>
 
-                                    {/* Position & Salary */}
+                                    {/* Group 3: Position & Salary (Optional) */}
                                     <div className="block sm:flex group form-inline mt-5 flex-col items-start pt-5 xl:flex-row">
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
                                                     <div className="font-medium">Position & Salary</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
-                                                        Required
+                                                        Optional
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Specify the employee’s position and monthly salary.
+                                                    Specify the employee’s position and salary if applicable.
                                                 </div>
                                             </div>
                                         </label>
@@ -205,13 +197,13 @@ const AddEmployee = () => {
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             >
-                                                <option value="">Select Position</option>
+                                                <option value="">Select Position (optional)</option>
                                                 <option value="Construction">Construction</option>
                                             </select>
                                             <input
                                                 type="number"
                                                 name="salary"
-                                                placeholder="Enter Employee Salary"
+                                                placeholder="Enter Employee Salary (optional)"
                                                 value={formData.salary}
                                                 onChange={handleChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
@@ -239,7 +231,6 @@ const AddEmployee = () => {
                                     className="transition duration-200 border shadow-sm inline-flex items-center justify-center px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 bg-primary border-primary text-white dark:border-primary w-full py-3 md:w-52 disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
-                                        // Show a spinner or any loader icon while saving
                                         <div className="flex items-center">
                                             <svg
                                                 className="animate-spin h-5 w-5 mr-2 text-white"
@@ -287,8 +278,7 @@ const AddEmployee = () => {
                                     <div>
                                         Provide correct details to ensure the system
                                         accurately manages attendance and payroll.
-                                        Double-check salary, finger ID, and phone number
-                                        for accuracy before saving.
+                                        Only name and phone are required for creating an employee.
                                     </div>
                                 </div>
                             </div>
