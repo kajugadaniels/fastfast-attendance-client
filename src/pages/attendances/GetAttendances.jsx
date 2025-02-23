@@ -42,8 +42,8 @@ const GetAttendances = () => {
                 setLoading(true)
                 const res = await fetchAttendances()
                 if (res.data) {
-                    // Each record typically has: 
-                    // { employee_id, name, phone, position, attendance_status, date, ... }
+                    // Expecting each record to include: employee_id, name, phone, gender, position,
+                    // salary, attendance_status, and time_in (if available)
                     setAttendanceData(res.data)
                 }
             } catch (err) {
@@ -69,7 +69,7 @@ const GetAttendances = () => {
             emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp.phone.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // 2) Filter by attendance status (Present/Absent) for today's status
+        // 2) Filter by attendance status (Present/Absent)
         const matchesAttendance = attendanceFilter
             ? emp.attendance_status === attendanceFilter
             : true
@@ -87,14 +87,14 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
-        // 5) Date range filter – assume each record has a `date` field (ISO string)
+        // 5) Date range filter – assume each record has a `date` field (if applicable)
         let matchesDateRange = true
-        if (startDate) {
+        if (startDate && emp.date) {
             const empDate = new Date(emp.date)
             const start = new Date(startDate)
             if (empDate < start) matchesDateRange = false
         }
-        if (endDate) {
+        if (endDate && emp.date) {
             const empDate = new Date(emp.date)
             const end = new Date(endDate)
             if (empDate > end) matchesDateRange = false
@@ -136,7 +136,8 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  For each day in [past2..today..future4], figure out an Attendance display
+    //  For each day in the 7-day window, determine the attendance display.
+    //  Note: For today's column (offset 0), we'll display the time_in (if available) below the status.
     // --------------------------------------
     const getDayStatus = (employee, dayIndex) => {
         const thatDay = daysArray[dayIndex]
@@ -300,7 +301,6 @@ const GetAttendances = () => {
                                         <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                             <div className="flex items-center">
                                                 <div className="image-fit zoom-in h-9 w-9">
-                                                    {/* Placeholder image */}
                                                     <img
                                                         src="https://midone-html.left4code.com/dist/images/fakers/preview-6.jpg"
                                                         className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
@@ -317,14 +317,15 @@ const GetAttendances = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        {/* For each of the 7 days, show a status cell */}
+                                        {/* For each of the 7 days, show a status cell.
+                                            For today's column (offset 0), also display the time_in (if available). */}
                                         {daysArray.map((d, dayIdx) => {
-                                            const status = getDayStatus(emp, dayIdx) // "Present", "Absent", "No Data", "Future"
+                                            const status = getDayStatus(emp, dayIdx)
                                             let bgColor = 'bg-slate-400'
                                             if (status === 'Present') bgColor = 'bg-success'
                                             else if (status === 'Absent' || status === 'No Data') bgColor = 'bg-danger'
                                             else if (status === 'Future') bgColor = 'bg-warning'
-
+                                            
                                             return (
                                                 <td
                                                     key={dayIdx}
@@ -335,6 +336,9 @@ const GetAttendances = () => {
                                                     >
                                                         {status}
                                                     </span>
+                                                    {dayOffsets[dayIdx] === 0 && emp.time_in && (
+                                                        <div className="text-xs mt-1">{emp.time_in}</div>
+                                                    )}
                                                 </td>
                                             )
                                         })}
