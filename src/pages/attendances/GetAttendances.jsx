@@ -108,9 +108,9 @@ const GetAttendances = () => {
         let matchesDateRange = true
         if (attendanceDateFilter) {
             if (
-                !emp.attendance_history.some(
+                !((emp.attendance_history || []).some(
                     hist => hist.attendance_date === attendanceDateFilter
-                )
+                ))
             ) {
                 matchesDateRange = false
             }
@@ -119,10 +119,12 @@ const GetAttendances = () => {
         // Filter by food menu (if selected)
         let matchesFoodMenu = true
         if (foodMenuFilter) {
+            const history = emp.attendance_history || []
             if (
-                !emp.attendance_history.some(
+                !history.some(
                     hist =>
                         hist.food_menu &&
+                        hist.food_menu.name &&
                         hist.food_menu.name.toLowerCase() === foodMenuFilter.toLowerCase()
                 )
             ) {
@@ -173,7 +175,7 @@ const GetAttendances = () => {
         const thatDay = daysArray[dayIndex]
         const dateStr = formatDate(thatDay)
         // Look up attendance history for this specific day
-        const record = emp.attendance_history.find(
+        const record = (emp.attendance_history || []).find(
             hist => hist.attendance_date === dateStr
         )
         if (record) {
@@ -278,7 +280,7 @@ const GetAttendances = () => {
                                 setFoodMenuFilter(e.target.value)
                                 setCurrentPage(1)
                             }}
-                            className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                            className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 w-full"
                         >
                             <option value="">All Food Menus</option>
                             {foodMenus.map(menu => (
@@ -309,13 +311,12 @@ const GetAttendances = () => {
                                     <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
                                         <input
                                             type="checkbox"
-                                            className="transition-all duration-100 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
+                                            className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
                                         />
                                     </th>
                                     <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
                                         Name
                                     </th>
-                                    {/* Create a column for each day in the 7-day window */}
                                     {daysArray.map((d, idx) => (
                                         <th
                                             key={idx}
@@ -335,7 +336,7 @@ const GetAttendances = () => {
                                         <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                             <input
                                                 type="checkbox"
-                                                className="transition-all duration-100 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
+                                                className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
                                             />
                                         </td>
                                         <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
