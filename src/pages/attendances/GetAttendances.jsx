@@ -21,14 +21,14 @@ const GetAttendances = () => {
     const [attendanceFilter, setAttendanceFilter] = useState('')
     const [genderFilter, setGenderFilter] = useState('')
     const [positionFilter, setPositionFilter] = useState('')
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 10
 
     // 7-day window (2 past days, today, 4 future days)
-    // dayOffsets = [-2, -1, 0, +1, +2, +3, +4]
-    // We'll generate an array of Date objects for these 7 days
     const dayOffsets = [-2, -1, 0, 1, 2, 3, 4]
     const daysArray = dayOffsets.map((offset) => {
         const d = new Date()
@@ -43,9 +43,7 @@ const GetAttendances = () => {
                 const res = await fetchAttendances()
                 if (res.data) {
                     // Each record typically has: 
-                    // {
-                    //   employee_id, name, phone, position, attendance_status ("Present" or "Absent"), ...
-                    // }
+                    // { employee_id, name, phone, position, attendance_status, date, ... }
                     setAttendanceData(res.data)
                 }
             } catch (err) {
@@ -71,9 +69,7 @@ const GetAttendances = () => {
             emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp.phone.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // 2) Filter by attendance status (Present/Absent)
-        //    Since the backend only returns a single "attendance_status" (for the current day),
-        //    we do a direct comparison. (In a real multi-day approach, you'd factor in each day's status.)
+        // 2) Filter by attendance status (Present/Absent) for today's status
         const matchesAttendance = attendanceFilter
             ? emp.attendance_status === attendanceFilter
             : true
@@ -91,11 +87,25 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
+        // 5) Date range filter – assume each record has a `date` field (ISO string)
+        let matchesDateRange = true
+        if (startDate) {
+            const empDate = new Date(emp.date)
+            const start = new Date(startDate)
+            if (empDate < start) matchesDateRange = false
+        }
+        if (endDate) {
+            const empDate = new Date(emp.date)
+            const end = new Date(endDate)
+            if (empDate > end) matchesDateRange = false
+        }
+
         return (
             matchesSearch &&
             matchesAttendance &&
             matchesGender &&
-            matchesPosition
+            matchesPosition &&
+            matchesDateRange
         )
     })
 
@@ -129,40 +139,29 @@ const GetAttendances = () => {
     //  For each day in [past2..today..future4], figure out an Attendance display
     // --------------------------------------
     const getDayStatus = (employee, dayIndex) => {
-        // dayIndex is offset from daysArray
         const thatDay = daysArray[dayIndex]
         const today = new Date()
         const isPastOrToday = thatDay <= today
 
         if (!isPastOrToday) {
-            // Future day => "Future date"
             return 'Future'
         }
 
-        // If the day is today or in the past, we only have "attendance_status" for the current day
-        // from the backend. We do not have actual data for past days yet.
-        // We'll do a simple logic:
-        // - If offset = 0 => use employee.attendance_status
-        // - If offset < 0 => "Attended" or "Not Attended" is not truly known, so let's show "No Data" or "Absent"
-        //   or "Attended" if we want to mock. We'll do "No Data" here for clarity.
-
         const offset = dayOffsets[dayIndex]
-
         if (offset === 0) {
             return employee.attendance_status || 'Absent'
         } else if (offset < 0) {
-            // Past date example: we do not have real data from backend
-            // Let's assume "No Data" or "Not Available"
             return 'No Data'
         }
-        // fallback (should not happen if isPastOrToday => offset <= 0)
         return 'N/A'
     }
 
     return (
         <>
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
-                <h2 className="mr-auto text-lg font-medium">Employee Attendance (Last 2 days, Today, Next 4 days)</h2>
+                <h2 className="mr-auto text-lg font-medium">
+                    Employee Attendance (Last 2 days, Today, Next 4 days)
+                </h2>
             </div>
 
             <div className="mt-5 grid grid-cols-12 gap-6">
@@ -183,7 +182,7 @@ const GetAttendances = () => {
                         <Search className="stroke-1.5 absolute inset-y-0 right-0 my-auto mr-3 h-4 w-4" />
                     </div>
 
-                    {/* Attendance Status Filter (for today's status only) */}
+                    {/* Attendance Status Filter */}
                     <select
                         className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
                         value={attendanceFilter}
@@ -197,7 +196,7 @@ const GetAttendances = () => {
                         <option value="Absent">Absent</option>
                     </select>
 
-                    {/* Gender Filter (optional, only if data includes emp.gender) */}
+                    {/* Gender Filter */}
                     <select
                         className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
                         value={genderFilter}
@@ -224,6 +223,30 @@ const GetAttendances = () => {
                         <option value="">All Positions</option>
                         <option value="Construction">Construction</option>
                     </select>
+
+                    {/* Date Range Filters */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-700">From:</span>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => {
+                                setStartDate(e.target.value)
+                                setCurrentPage(1)
+                            }}
+                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                        />
+                        <span className="text-sm text-slate-700">To:</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => {
+                                setEndDate(e.target.value)
+                                setCurrentPage(1)
+                            }}
+                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                        />
+                    </div>
                 </div>
 
                 <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible">
