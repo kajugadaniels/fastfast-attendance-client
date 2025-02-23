@@ -13,7 +13,7 @@ const EditEmployee = () => {
         gender: '',
         position: '',
         salary: '',
-        finger_id: '',
+        image: null
     });
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
@@ -30,7 +30,7 @@ const EditEmployee = () => {
                     gender: employee.gender || '',
                     position: employee.position || '',
                     salary: employee.salary || '',
-                    finger_id: employee.finger_id || '',
+                    image: null
                 });
             } catch (error) {
                 toast.error('Failed to load employee details.');
@@ -46,15 +46,21 @@ const EditEmployee = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData((prev) => ({ ...prev, image: file }));
+        }
+    };
+
     const validateForm = () => {
-        const { name, phone, gender, position, salary, finger_id } = formData;
+        const { name, phone, gender, position, salary } = formData;
         if (
             !name.trim() ||
             !phone.trim() ||
             !gender.trim() ||
             !position.trim() ||
-            !salary.toString().trim() ||
-            !finger_id.toString().trim()
+            !salary.toString().trim()
         ) {
             toast.error('Please fill in all required fields.');
             return false;
@@ -105,18 +111,18 @@ const EditEmployee = () => {
                                     Edit Employee Details
                                 </div>
                                 <div className="mt-5">
-                                    {/* Group 1: Name & Finger ID */}
+                                    {/* Group 1: Name & Image */}
                                     <div className="block sm:flex group form-inline mt-5 flex-col items-start pt-5 xl:flex-row">
                                         <label className="inline-block mb-2 xl:!mr-10 xl:w-64">
                                             <div className="text-left">
                                                 <div className="flex items-center">
-                                                    <div className="font-medium">Name & Finger ID</div>
+                                                    <div className="font-medium">Name & Image</div>
                                                     <div className="ml-2 rounded-md bg-slate-200 px-2 py-0.5 text-xs text-slate-600 dark:bg-darkmode-300 dark:text-slate-400">
                                                         Required
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 text-xs leading-relaxed text-slate-500">
-                                                    Please enter the employee’s full name and finger ID.
+                                                    Please enter the employee’s full name and upload an image.
                                                 </div>
                                             </div>
                                         </label>
@@ -130,11 +136,9 @@ const EditEmployee = () => {
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
                                             <input
-                                                type="text"
-                                                name="finger_id"
-                                                placeholder="Enter Finger ID"
-                                                value={formData.finger_id}
-                                                onChange={handleChange}
+                                                type="file"
+                                                name="image"
+                                                onChange={handleImageChange}
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             />
                                         </div>
@@ -278,7 +282,7 @@ const EditEmployee = () => {
                                 <div className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-500">
                                     <div>
                                         Provide correct details to ensure the system accurately manages attendance and payroll.
-                                        Double-check salary, finger ID, and phone number for accuracy before saving.
+                                        Double-check salary, and phone number for accuracy before saving.
                                     </div>
                                 </div>
                             </div>
