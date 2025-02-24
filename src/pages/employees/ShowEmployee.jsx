@@ -211,6 +211,18 @@ const ShowEmployee = () => {
                             <span>{employeeData.employee.position}</span>
                         </div>
                     </div>
+
+                    {/* QR Code Section */}
+                    <div className="flex justify-center mt-6">
+                        <div ref={qrCodeRef}>
+                            <QRCode value={qrCodeValue} size={128} />
+                        </div>
+                    </div>
+                    <div className="mt-4 text-center">
+                        <button onClick={downloadQRCode} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-primary border-primary text-white dark:border-primary">
+                            Download QR Code
+                        </button>
+                    </div>
                 </div>
 
                 {/* Attendance History */}
@@ -254,7 +266,7 @@ const ShowEmployee = () => {
                             <tbody>
                                 {paginatedAttendance.map(att => (
                                     <tr key={att.id}>
-                                        <td className="px-5 py-3">{formatDateTime(att.time_in)}</td>
+                                        <td className="px-5 py-3">{formatDateTime(att.time)}</td>
                                         <td className="px-5 py-3">{att.attendance_status}</td>
                                         <td className="px-5 py-3">
                                             {att.food_menu && att.food_menu.length > 0
@@ -326,18 +338,6 @@ const ShowEmployee = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* QR Code Section */}
-            <div className="flex justify-center mt-6">
-                <div ref={qrCodeRef}>
-                    <QRCode value={qrCodeValue} size={128} />
-                </div>
-            </div>
-            <div className="mt-4 text-center">
-                <button onClick={downloadQRCode} className="btn-primary">
-                    Download QR Code
-                </button>
             </div>
 
             {/* Enhanced Stunning Modal for Food Menu Selection */}
