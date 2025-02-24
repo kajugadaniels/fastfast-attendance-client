@@ -354,7 +354,7 @@ const Dashboard = () => {
                                         <div className="intro-x">
                                             <div className="box zoom-in mb-3 flex items-center px-5 py-3">
                                                 <div className="image-fit h-10 w-10 flex-none overflow-hidden rounded-full">
-                                                    <img src="https://midone-html.left4code.com/dist/images/fakers/preview-6.jpg" alt="" />
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" alt="" />
                                                 </div>
                                                 <div className="ml-4 mr-auto">
                                                     <div className="font-medium">

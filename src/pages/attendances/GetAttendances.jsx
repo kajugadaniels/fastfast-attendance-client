@@ -360,7 +360,7 @@ const GetAttendances = () => {
                                             <div className="flex items-center">
                                                 <div className="image-fit zoom-in h-9 w-9">
                                                     <img
-                                                        src="https://midone-html.left4code.com/dist/images/fakers/preview-6.jpg"
+                                                        src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
                                                         className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
                                                         alt="employee avatar"
                                                     />
