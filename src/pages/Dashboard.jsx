@@ -210,7 +210,13 @@ const Dashboard = () => {
             <h2 className="text-xl font-semibold mb-4">Summary for {currentDate}</h2>
 
             {/* Top summary cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Total Employees */}
+                <div className="bg-white shadow-md rounded-lg p-6">
+                    <h3 className="text-lg font-medium mb-2">Total Employees</h3>
+                    <p className="text-3xl font-bold">{employees.length}</p>
+                </div>
+
                 {/* Total Attendance Today */}
                 <div className="bg-white shadow-md rounded-lg p-6">
                     <h3 className="text-lg font-medium mb-2">Total Attendance Today</h3>
@@ -222,33 +228,33 @@ const Dashboard = () => {
                     <h3 className="text-lg font-medium mb-2">Total Food Menus</h3>
                     <p className="text-3xl font-bold">{totalFoodMenus}</p>
                 </div>
+            </div>
 
-                {/* Food Menu Attendance Summary */}
-                <div className="bg-white shadow-md rounded-lg p-6 md:col-span-2">
-                    <h3 className="text-lg font-medium mb-4">Food Menu Attendance</h3>
-                    {Object.keys(foodMenuSummary).length > 0 ? (
-                        <table className="min-w-full">
-                            <thead>
-                                <tr>
-                                    <th className="px-4 py-2 text-left">Food Menu</th>
-                                    <th className="px-4 py-2 text-left">Price (RWF)</th>
-                                    <th className="px-4 py-2 text-left">Attendees</th>
+            {/* Food Menu Attendance Summary */}
+            <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+                <h3 className="text-lg font-medium mb-4">Food Menu Attendance</h3>
+                {Object.keys(foodMenuSummary).length > 0 ? (
+                    <table className="min-w-full">
+                        <thead>
+                            <tr>
+                                <th className="px-4 py-2 text-left">Food Menu</th>
+                                <th className="px-4 py-2 text-left">Price (RWF)</th>
+                                <th className="px-4 py-2 text-left">Attendees</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Object.entries(foodMenuSummary).map(([menuName, summary]) => (
+                                <tr key={menuName} className="border-t">
+                                    <td className="px-4 py-2">{menuName}</td>
+                                    <td className="px-4 py-2">{summary.price}</td>
+                                    <td className="px-4 py-2">{summary.count}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {Object.entries(foodMenuSummary).map(([menuName, summary]) => (
-                                    <tr key={menuName} className="border-t">
-                                        <td className="px-4 py-2">{menuName}</td>
-                                        <td className="px-4 py-2">{summary.price}</td>
-                                        <td className="px-4 py-2">{summary.count}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p>No attendance records for food menus today.</p>
-                    )}
-                </div>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p>No attendance records for food menus today.</p>
+                )}
             </div>
 
             {/* Employees by Position */}
