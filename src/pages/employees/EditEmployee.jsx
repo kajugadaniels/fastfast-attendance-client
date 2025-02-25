@@ -200,7 +200,10 @@ const EditEmployee = () => {
                                                 className="disabled:bg-slate-100 dark:disabled:bg-darkmode-800/50 transition duration-200 ease-in-out w-full text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 pr-8 focus:ring-4 focus:ring-primary dark:bg-darkmode-800"
                                             >
                                                 <option value="">Select Position (optional)</option>
-                                                <option value="Construction">Construction</option>
+                                                <option value="Staff">Staff</option>
+                                                <option value="Umwubatsi">Umwubatsi</option>
+                                                <option value="Umufundi">Umufundi</option>
+                                                <option value="Umuyede">Umuyede</option>
                                             </select>
                                             <input
                                                 type="number"

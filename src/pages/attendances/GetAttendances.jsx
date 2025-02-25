@@ -262,7 +262,10 @@ const GetAttendances = () => {
                         className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
                     >
                         <option value="">All Positions</option>
-                        <option value="Construction">Construction</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Umwubatsi">Umwubatsi</option>
+                        <option value="Umufundi">Umufundi</option>
+                        <option value="Umuyede">Umuyede</option>
                     </select>
 
                     {/* Date Range Filters */}
