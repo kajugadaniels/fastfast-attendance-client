@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import QRCode from 'react-qr-code'
 import { addAttendance, fetchEmployee, fetchFoodMenus } from '../../api'
 import { Eye, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toPng } from 'html-to-image'
+import { jsPDF } from 'jspdf'
 
 const ShowEmployee = () => {
     const { id } = useParams()
@@ -21,6 +22,9 @@ const ShowEmployee = () => {
     const [isModalOpen, setIsModalOpen] = useState(false) // Controls modal visibility
     const [selectedFoodMenu, setSelectedFoodMenu] = useState(null) // Selected food menu for attendance
     const qrCodeRef = useRef() // For QR code download
+
+    // Ref for attendance history section for PDF generation
+    const attendanceRef = useRef()
 
     const pageSize = 10
     const [currentPage, setCurrentPage] = useState(1)
@@ -106,6 +110,25 @@ const ShowEmployee = () => {
         }
     }
 
+    // Download Attendance History as PDF
+    const downloadAttendancePDF = () => {
+        if (attendanceRef.current) {
+            toPng(attendanceRef.current)
+                .then(dataUrl => {
+                    const pdf = new jsPDF('p', 'mm', 'a4')
+                    const pdfWidth = pdf.internal.pageSize.getWidth()
+                    const imgProps = pdf.getImageProperties(dataUrl)
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+                    pdf.save(`employee_${employeeData?.employee?.id}_attendance_history.pdf`)
+                })
+                .catch(error => {
+                    console.error('Error generating PDF:', error)
+                    toast.error('Failed to download PDF.')
+                })
+        }
+    }
+
     // Filter and sort the attendance history (based on date only)
     const getFilteredSortedAttendance = () => {
         if (!employeeData || !employeeData.attendance_history) return []
@@ -157,7 +180,6 @@ const ShowEmployee = () => {
         return new Date(dateStr).toLocaleString()
     }
 
-    // If loading or no data
     if (loading) {
         return <div>Loading employee details...</div>
     }
@@ -219,7 +241,7 @@ const ShowEmployee = () => {
                         </div>
                     </div>
                     <div className="mt-4 text-center">
-                        <button onClick={downloadQRCode} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-primary border-primary text-white dark:border-primary">
+                        <button onClick={downloadQRCode} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white">
                             Download QR Code
                         </button>
                     </div>
@@ -227,26 +249,35 @@ const ShowEmployee = () => {
 
                 {/* Attendance History */}
                 <div className="col-span-12 lg:col-span-8">
-                    <div className="box p-5">
+                    <div className="box p-5" ref={attendanceRef}>
                         <div className="mb-5 flex justify-between items-center border-b pb-5">
                             <span className="text-base font-medium">Attendance History</span>
                             <div className="flex gap-3">
                                 <input
                                     type="date"
                                     value={dateStart}
-                                    onChange={e => setDateStart(e.target.value)}
+                                    onChange={e => {
+                                        setDateStart(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="input-date"
                                 />
                                 <span className="text-slate-500">to</span>
                                 <input
                                     type="date"
                                     value={dateEnd}
-                                    onChange={e => setDateEnd(e.target.value)}
+                                    onChange={e => {
+                                        setDateEnd(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="input-date"
                                 />
                                 <select
                                     value={sortOption}
-                                    onChange={e => setSortOption(e.target.value)}
+                                    onChange={e => {
+                                        setSortOption(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
                                     className="select-sort"
                                 >
                                     <option value="dateDesc">Date (Newest)</option>
@@ -265,16 +296,16 @@ const ShowEmployee = () => {
                             </thead>
                             <tbody>
                                 {paginatedAttendance.map(att => (
-                                    <tr key={att.id}>
+                                    <tr key={att.id} className="border-t">
                                         <td className="px-5 py-3">{formatDateTime(att.time)}</td>
                                         <td className="px-5 py-3">{att.attendance_status}</td>
                                         <td className="px-5 py-3">
                                             {att.food_menu && att.food_menu.length > 0
                                                 ? att.food_menu.map((menu, idx) => (
-                                                    <div key={idx}>
-                                                        {menu.name} - {menu.price} RWF
-                                                    </div>
-                                                ))
+                                                      <div key={idx}>
+                                                          {menu.name} - {menu.price} RWF
+                                                      </div>
+                                                  ))
                                                 : "N/A"}
                                         </td>
                                     </tr>
@@ -285,16 +316,14 @@ const ShowEmployee = () => {
                                     <tr>
                                         <td colSpan="3" className="font-medium px-5 py-3 border-t text-right">
                                             Total Earnings:{" "}
-                                            {
-                                                paginatedAttendance
-                                                    .reduce((sum, att) => {
-                                                        if (att.attendance_status === "Present" && att.food_menu && att.food_menu.length > 0) {
-                                                            return sum + parseFloat(att.food_menu[0].price)
-                                                        }
-                                                        return sum
-                                                    }, 0)
-                                                    .toFixed(2)
-                                            }{" "}
+                                            {paginatedAttendance
+                                                .reduce((sum, att) => {
+                                                    if (att.attendance_status === "Present" && att.food_menu && att.food_menu.length > 0) {
+                                                        return sum + parseFloat(att.food_menu[0].price)
+                                                    }
+                                                    return sum
+                                                }, 0)
+                                                .toFixed(2)}{" "}
                                             RWF
                                         </td>
                                     </tr>
@@ -374,7 +403,7 @@ const ShowEmployee = () => {
                             </button>
                             <button
                                 onClick={handleAttendanceSubmit}
-                                className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-primary border-primary text-white dark:border-primary"
+                                className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
                             >
                                 Submit Attendance
                             </button>
@@ -385,8 +414,14 @@ const ShowEmployee = () => {
 
             {/* Actions */}
             <div className="flex justify-end gap-4 mt-6">
-                <button onClick={() => setIsModalOpen(true)} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-primary border-primary text-white dark:border-primary">
+                <button onClick={() => setIsModalOpen(true)} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white">
                     Record Today's Attendance
+                </button>
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-success focus:ring-opacity-20 bg-success border-success text-white"
+                >
+                    Download Attendance PDF
                 </button>
             </div>
         </div>
