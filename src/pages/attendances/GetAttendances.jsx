@@ -107,7 +107,7 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
-        // Filter by date range: Check if at least one attendance record falls within the range.
+        // Filter by date range
         let matchesDateRange = true
         if (startDate) {
             const start = new Date(startDate)
@@ -132,8 +132,8 @@ const GetAttendances = () => {
             const hasFoodMenu = history.some(
                 hist =>
                     hist.food_menu &&
-                    hist.food_menu.name &&
-                    hist.food_menu.name.toLowerCase() === foodMenuFilter.toLowerCase()
+                    hist.food_menu.length > 0 &&
+                    hist.food_menu[0].name.toLowerCase() === foodMenuFilter.toLowerCase()
             )
             if (!hasFoodMenu) matchesFoodMenu = false
         }
@@ -181,7 +181,6 @@ const GetAttendances = () => {
     const getDayStatus = (emp, dayIndex) => {
         const thatDay = daysArray[dayIndex]
         const dateStr = formatDate(thatDay)
-        // Look up attendance history for this specific day
         const record = (emp.attendance_history || []).find(
             hist => hist.attendance_date === dateStr
         )
@@ -223,7 +222,7 @@ const GetAttendances = () => {
                         <Search className="stroke-1.5 absolute inset-y-0 right-0 my-auto mr-3 h-4 w-4" />
                     </div>
 
-                    {/* Attendance Status Filter (for today's record) */}
+                    {/* Attendance Status Filter */}
                     <select
                         value={attendanceFilter}
                         onChange={e => {
@@ -304,7 +303,7 @@ const GetAttendances = () => {
                         >
                             <option value="">All Food Menus</option>
                             {foodMenus.map(menu => (
-                                <option key={menu.id} value={menu.name}>
+                                <option key={menu.id} value={menu.name.toLowerCase()}>
                                     {menu.name}
                                 </option>
                             ))}
