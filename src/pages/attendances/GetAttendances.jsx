@@ -42,12 +42,6 @@ const GetAttendances = () => {
         return d
     })
 
-    // Added state to prevent error; if not needed, you can remove the "Record Today's Attendance" button.
-    const [isModalOpen, setIsModalOpen] = useState(false)
-
-    // Ref for the attendance table container (for PDF download)
-    const attendanceRef = useRef()
-
     // Fetch attendance records (complete history)
     useEffect(() => {
         const fetchAttendance = async () => {
@@ -213,83 +207,91 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  PDF Download Functionality
+    //  Download Attendance PDF Functionality
     // --------------------------------------
     const downloadAttendancePDF = () => {
-        // If no filters are applied, download only today's attendance
-        if (
-            searchTerm === '' &&
-            attendanceFilter === '' &&
-            genderFilter === '' &&
-            positionFilter === '' &&
-            startDate === '' &&
-            endDate === '' &&
-            foodMenuFilter === ''
-        ) {
-            const today = new Date().toISOString().split('T')[0]
-            const filteredToday = attendanceData.filter(emp => {
-                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === today)
-                return todayRecord && todayRecord.attendance_status === "Present"
-            })
-            // Build an HTML table string for today's attendance
-            let tableHTML = '<table style="width:100%; border-collapse: collapse;" border="1"><thead><tr><th>Name</th><th>Phone</th><th>Gender</th><th>Position</th><th>Attendance Date</th><th>Time</th><th>Food Menu</th></tr></thead><tbody>'
-            filteredToday.forEach(emp => {
-                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === today)
-                if (todayRecord) {
-                    const foodMenuStr = todayRecord.food_menu && todayRecord.food_menu.length > 0 ? todayRecord.food_menu.map(m => `${m.name} - ${m.price} RWF`).join(', ') : 'N/A'
-                    tableHTML += `<tr>
-                        <td>${emp.name}</td>
-                        <td>${emp.phone}</td>
-                        <td>${emp.gender || ''}</td>
-                        <td>${emp.position || ''}</td>
-                        <td>${todayRecord.attendance_date}</td>
-                        <td>${todayRecord.time || ''}</td>
-                        <td>${foodMenuStr}</td>
-                    </tr>`
-                }
-            })
-            tableHTML += '</tbody></table>'
+        // Check if user has not applied any filters
+        const noFiltersApplied =
+            !searchTerm && !attendanceFilter && !genderFilter && !positionFilter && !startDate && !endDate && !foodMenuFilter
 
-            // Create a temporary container for the table
-            const tempDiv = document.createElement('div')
-            tempDiv.style.position = 'absolute'
-            tempDiv.style.left = '-9999px'
-            tempDiv.innerHTML = tableHTML
-            document.body.appendChild(tempDiv)
-            toPng(tempDiv)
-                .then(dataUrl => {
-                    const pdf = new jsPDF('p', 'mm', 'a4')
-                    const pdfWidth = pdf.internal.pageSize.getWidth()
-                    const imgProps = pdf.getImageProperties(dataUrl)
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-                    pdf.save(`today_attendance.pdf`)
-                })
-                .catch(error => {
-                    console.error('Error generating PDF:', error)
-                    toast.error('Failed to download PDF.')
-                })
-                .finally(() => {
-                    document.body.removeChild(tempDiv)
-                })
-        } else {
-            // Otherwise, download the currently displayed attendance table
-            if (attendanceRef.current) {
-                toPng(attendanceRef.current)
-                    .then(dataUrl => {
-                        const pdf = new jsPDF('p', 'mm', 'a4')
-                        const pdfWidth = pdf.internal.pageSize.getWidth()
-                        const imgProps = pdf.getImageProperties(dataUrl)
-                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-                        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-                        pdf.save('attendance.pdf')
-                    })
-                    .catch(error => {
-                        console.error('Error generating PDF:', error)
-                        toast.error('Failed to download PDF.')
-                    })
-            }
+        // If no filters, override with today's attendance filter
+        let effectiveStartDate = startDate
+        let effectiveEndDate = endDate
+        if (noFiltersApplied) {
+            const today = new Date().toISOString().split('T')[0]
+            effectiveStartDate = today
+            effectiveEndDate = today
         }
+
+        // We create a temporary element to render the attendance table based on the effective filters
+        const tempDiv = document.createElement('div')
+        tempDiv.style.position = 'absolute'
+        tempDiv.style.top = '-9999px'
+        tempDiv.style.left = '-9999px'
+        tempDiv.style.width = '1000px' // Set a fixed width for PDF rendering
+
+        // Generate HTML for the PDF table – we mimic the structure of the attendance table
+        let htmlContent = `
+            <h2 style="text-align: center; font-family: Arial, sans-serif;">Attendance History</h2>
+            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; font-family: Arial, sans-serif; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Name</th>`
+
+        // Add headers for each day in the 7-day window
+        daysArray.forEach(d => {
+            htmlContent += `<th>${formatDate(d)}</th>`
+        })
+        htmlContent += `</tr>
+                </thead>
+                <tbody>`
+
+        // For PDF, we filter attendanceData based on the effective start and end dates if no filters applied,
+        // otherwise use the already computed filteredData.
+        let pdfData
+        if (noFiltersApplied) {
+            const todayStr = effectiveStartDate
+            pdfData = attendanceData.filter(emp => {
+                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === todayStr)
+                return todayRecord && todayRecord.attendance_status === 'Present'
+            })
+        } else {
+            pdfData = filteredData
+        }
+
+        pdfData.forEach(emp => {
+            htmlContent += `<tr>
+                                <td>${emp.name}</td>`
+            daysArray.forEach((_, idx) => {
+                const { status, time } = getDayStatus(emp, idx)
+                htmlContent += `<td>${status}${time ? `<br/><small>${time}</small>` : ''}</td>`
+            })
+            htmlContent += `</tr>`
+        })
+
+        htmlContent += `
+                </tbody>
+            </table>`
+
+        tempDiv.innerHTML = htmlContent
+        document.body.appendChild(tempDiv)
+
+        // Use html-to-image to convert the temporary div to an image
+        toPng(tempDiv)
+            .then(dataUrl => {
+                const pdf = new jsPDF('l', 'mm', 'a4')
+                const pdfWidth = pdf.internal.pageSize.getWidth()
+                const imgProps = pdf.getImageProperties(dataUrl)
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+                pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+                pdf.save(`attendance_${new Date().toISOString().split('T')[0]}.pdf`)
+                document.body.removeChild(tempDiv)
+            })
+            .catch(error => {
+                console.error('Error generating PDF:', error)
+                toast.error('Failed to download PDF.')
+                document.body.removeChild(tempDiv)
+            })
     }
 
     if (loading) {
@@ -320,17 +322,9 @@ const GetAttendances = () => {
                 {/* Today Attendance Button */}
                 <button
                     onClick={handleTodayAttendance}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70 rounded-full mb-2 mr-1"
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full mb-2 mr-1 bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70"
                 >
                     Today Attendance
-                </button>
-
-                {/* Button to download Attendance PDF */}
-                <button
-                    onClick={downloadAttendancePDF}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70 rounded-full mb-2 mr-1"
-                >
-                    Download Attendance PDF
                 </button>
             </div>
 
@@ -441,7 +435,7 @@ const GetAttendances = () => {
                     </div>
                 </div>
 
-                <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible" ref={attendanceRef}>
+                <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible">
                     {loading ? (
                         <div className="text-center py-10">Loading attendance...</div>
                     ) : error ? (
@@ -599,6 +593,16 @@ const GetAttendances = () => {
                 )}
             </div>
 
+            {/* Button to download Attendance Data as PDF based on filters */}
+            <div className="flex justify-center mt-4">
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="px-5 py-2 bg-secondary text-white rounded-md shadow hover:bg-secondary-dark transition duration-200"
+                >
+                    Download Attendance PDF
+                </button>
+            </div>
+
             {/* Enhanced Stunning Modal for Food Menu Selection */}
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
@@ -633,7 +637,7 @@ const GetAttendances = () => {
                             </button>
                             <button
                                 onClick={handleAttendanceSubmit}
-                                className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white"
+                                className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
                             >
                                 Submit Attendance
                             </button>
@@ -641,6 +645,13 @@ const GetAttendances = () => {
                     </div>
                 </div>
             )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-4 mt-6">
+                <button onClick={() => setIsModalOpen(true)} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white">
+                    Record Today's Attendance
+                </button>
+            </div>
         </>
     )
 }
