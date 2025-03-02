@@ -18,12 +18,15 @@ const GetAttendances = () => {
 
     // Filters & search
     const [searchTerm, setSearchTerm] = useState('')
-    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent" filter for today's record
+    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent"
     const [genderFilter, setGenderFilter] = useState('')
     const [positionFilter, setPositionFilter] = useState('')
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
     const [foodMenuFilter, setFoodMenuFilter] = useState('')
+
+    // New state: Today-only mode
+    const [todayOnly, setTodayOnly] = useState(false)
 
     // Retrieve food menus for filtering options
     const [foodMenus, setFoodMenus] = useState([])
@@ -39,6 +42,9 @@ const GetAttendances = () => {
         d.setDate(d.getDate() + offset)
         return d
     })
+
+    // Today’s date string
+    const todayStr = new Date().toISOString().split('T')[0]
 
     // Fetch attendance records (complete history)
     useEffect(() => {
@@ -88,7 +94,6 @@ const GetAttendances = () => {
             emp.phone.toLowerCase().includes(searchTerm.toLowerCase())
 
         // Compute today's attendance status from attendance_history
-        const todayStr = new Date().toISOString().split('T')[0]
         const todayRecord =
             (emp.attendance_history || []).find(hist => hist.attendance_date === todayStr) || {}
         const todayStatus = todayRecord.attendance_status || "Absent"
@@ -125,7 +130,7 @@ const GetAttendances = () => {
             if (!hasRecord) matchesDateRange = false
         }
 
-        // Filter by food menu: Check if any attendance record has a food_menu with the given name.
+        // Filter by food menu
         let matchesFoodMenu = true
         if (foodMenuFilter) {
             const history = emp.attendance_history || []
@@ -136,6 +141,14 @@ const GetAttendances = () => {
                     hist.food_menu[0].name.toLowerCase() === foodMenuFilter.toLowerCase()
             )
             if (!hasFoodMenu) matchesFoodMenu = false
+        }
+
+        // NEW: If Today-Only is enabled, ensure employee has a "Present" record for today.
+        if (todayOnly) {
+            const hasToday = (emp.attendance_history || []).some(
+                hist => hist.attendance_date === todayStr && hist.attendance_status === "Present"
+            )
+            if (!hasToday) return false
         }
 
         return (
@@ -176,11 +189,10 @@ const GetAttendances = () => {
 
     // --------------------------------------
     //  Determine attendance for a given day by looking up the history.
-    //  Returns an object: { status, time } for that day.
+    //  Modified to accept a date object.
     // --------------------------------------
-    const getDayStatus = (emp, dayIndex) => {
-        const thatDay = daysArray[dayIndex]
-        const dateStr = formatDate(thatDay)
+    const getDayStatus = (emp, dateObj) => {
+        const dateStr = dateObj.toISOString().split('T')[0]
         const record = (emp.attendance_history || []).find(
             hist => hist.attendance_date === dateStr
         )
@@ -188,7 +200,7 @@ const GetAttendances = () => {
             return { status: record.attendance_status, time: record.time }
         } else {
             const today = new Date()
-            if (thatDay < today || thatDay.toDateString() === today.toDateString()) {
+            if (dateObj < today || dateObj.toDateString() === today.toDateString()) {
                 return { status: "Absent", time: null }
             } else {
                 return { status: "Future", time: null }
@@ -196,12 +208,30 @@ const GetAttendances = () => {
         }
     }
 
+    // Determine which days to show in the table:
+    // If Today-Only mode is enabled, only show today's date. Otherwise, show the 7-day window.
+    const tableDaysArray = todayOnly ? [new Date()] : daysArray
+
+    if (loading) {
+        return <div className="text-center py-10">Loading attendance...</div>
+    }
+
     return (
         <>
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
                 <h2 className="mr-auto text-lg font-medium">
-                    Employee Attendance (Last 4 days, Today, Next 2 days)
+                    Employee Attendance {todayOnly ? '(Today Only)' : '(Last 4 days, Today, Next 2 days)'}
                 </h2>
+                {/* Today Attendance toggle button */}
+                <button
+                    onClick={() => {
+                        setTodayOnly(!todayOnly)
+                        setCurrentPage(1)
+                    }}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 transition duration-200"
+                >
+                    {todayOnly ? 'Show All Attendance' : 'Today Attendance'}
+                </button>
             </div>
 
             <div className="mt-5 grid grid-cols-12 gap-6">
@@ -267,29 +297,31 @@ const GetAttendances = () => {
                         <option value="Umuyede">Umuyede</option>
                     </select>
 
-                    {/* Date Range Filters */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-slate-700">From:</span>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={e => {
-                                setStartDate(e.target.value)
-                                setCurrentPage(1)
-                            }}
-                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
-                        />
-                        <span className="text-sm text-slate-700">To:</span>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={e => {
-                                setEndDate(e.target.value)
-                                setCurrentPage(1)
-                            }}
-                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
-                        />
-                    </div>
+                    {/* Date Range Filters (hide if Today mode is on) */}
+                    {!todayOnly && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-700">From:</span>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={e => {
+                                    setStartDate(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                            />
+                            <span className="text-sm text-slate-700">To:</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={e => {
+                                    setEndDate(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                            />
+                        </div>
+                    )}
 
                     {/* Food Menu Filter */}
                     <div className="relative w-56">
@@ -336,7 +368,7 @@ const GetAttendances = () => {
                                     <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
                                         Name
                                     </th>
-                                    {daysArray.map((d, idx) => (
+                                    {tableDaysArray.map((d, idx) => (
                                         <th
                                             key={idx}
                                             className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center"
@@ -377,8 +409,8 @@ const GetAttendances = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        {daysArray.map((d, dayIdx) => {
-                                            const { status, time } = getDayStatus(emp, dayIdx)
+                                        {tableDaysArray.map((d, dayIdx) => {
+                                            const { status, time } = getDayStatus(emp, d)
                                             let bgColor = 'bg-slate-400'
                                             if (status === 'Present') bgColor = 'bg-success'
                                             else if (status === 'Absent') bgColor = 'bg-danger'
@@ -393,7 +425,7 @@ const GetAttendances = () => {
                                                     >
                                                         {status}
                                                     </span>
-                                                    {dayOffsets[dayIdx] === 0 && time && (
+                                                    {dayIdx === 0 && time && (
                                                         <div className="text-xs mt-1">{time}</div>
                                                     )}
                                                 </td>
@@ -467,6 +499,69 @@ const GetAttendances = () => {
                         </nav>
                     </div>
                 )}
+            </div>
+
+            {/* Button to download Attendance History as PDF */}
+            <div className="flex justify-center mt-4">
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="px-5 py-2 bg-secondary text-white rounded-md shadow hover:bg-secondary-dark transition duration-200"
+                >
+                    Download Attendance PDF
+                </button>
+            </div>
+
+            {/* Enhanced Stunning Modal for Food Menu Selection */}
+            {isModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-1/3 p-8 transform transition-all duration-300">
+                        <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
+                            Select Food Menu
+                        </h3>
+                        <ul className="space-y-4 max-h-60 overflow-y-auto">
+                            {foodMenus.map(menu => (
+                                <li
+                                    key={menu.id}
+                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
+                                    onClick={() => setSelectedFoodMenu(menu)}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-800 dark:text-gray-100 font-medium">
+                                            {menu.name}
+                                        </span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                                            {menu.price} RWF
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="mt-8 flex justify-end space-x-4">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAttendanceSubmit}
+                                className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
+                            >
+                                Submit Attendance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-4 mt-6">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white"
+                >
+                    Record Today's Attendance
+                </button>
             </div>
         </>
     )
