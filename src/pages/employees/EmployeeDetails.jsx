@@ -1,72 +1,72 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { fetchEmployee, addAttendance, fetchFoodMenus } from '../../api'
-import { toast } from 'react-toastify'
+import React, { useEffect, useState } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { fetchEmployee, addAttendance, fetchFoodMenus } from '../../api';
+import { toast } from 'react-toastify';
 
 const EmployeeDetails = () => {
-    const { employeeId } = useParams()
-    const navigate = useNavigate()
+    const { employeeId } = useParams();
+    const navigate = useNavigate();
 
-    const [employeeData, setEmployeeData] = useState(null)
-    const [foodMenus, setFoodMenus] = useState([]) // Food menu options
-    const [loading, setLoading] = useState(true)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null)
+    const [employeeData, setEmployeeData] = useState(null);
+    const [foodMenus, setFoodMenus] = useState([]); // Food menu options
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null);
 
     useEffect(() => {
         const getEmployeeDetails = async () => {
             try {
-                setLoading(true)
-                const res = await fetchEmployee(employeeId)
-                setEmployeeData(res.data)
+                setLoading(true);
+                const res = await fetchEmployee(employeeId);
+                setEmployeeData(res.data);
             } catch (error) {
-                toast.error('Failed to load employee details.')
-                navigate('/employees')
+                toast.error('Failed to load employee details.');
+                navigate('/employees');
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
-        }
+        };
 
         const getFoodMenus = async () => {
             try {
-                const res = await fetchFoodMenus()
-                setFoodMenus(res.data)
+                const res = await fetchFoodMenus();
+                setFoodMenus(res.data);
             } catch (error) {
-                toast.error('Failed to load food menus.')
+                toast.error('Failed to load food menus.');
             }
-        }
+        };
 
-        getEmployeeDetails()
-        getFoodMenus()
-    }, [employeeId, navigate])
+        getEmployeeDetails();
+        getFoodMenus();
+    }, [employeeId, navigate]);
 
     const handleGoBack = () => {
-        navigate('/employees')
-    }
+        navigate('/employees');
+    };
 
     const handleAttendanceSubmit = async () => {
         if (!selectedFoodMenuId) {
-            toast.error('Please select a food menu.')
-            return
+            toast.error('Please select a food menu.');
+            return;
         }
         try {
             const response = await addAttendance({
                 finger_id: employeeData.employee.finger_id,
                 food_menu: selectedFoodMenuId,
-            })
+            });
             if (response && response.message) {
-                toast.success(response.message.detail)
-                setIsModalOpen(false)
+                toast.success(response.message.detail);
+                setIsModalOpen(false);
             }
         } catch (error) {
             const errorMessage =
-                error.response?.data?.message?.detail || 'Failed to record attendance.'
-            toast.error(errorMessage)
+                error.response?.data?.message?.detail || 'Failed to record attendance.';
+            toast.error(errorMessage);
         }
-    }
+    };
 
     if (loading) {
-        return <div className="text-center py-10">Loading...</div>
+        return <div className="text-center py-10">Loading...</div>;
     }
 
     if (!employeeData) {
@@ -77,7 +77,7 @@ const EmployeeDetails = () => {
                     Go Back
                 </button>
             </div>
-        )
+        );
     }
 
     return (
@@ -103,20 +103,31 @@ const EmployeeDetails = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="text-center">
                             <p className="font-medium text-gray-700 dark:text-gray-200">Position:</p>
-                            <p className="text-gray-600 dark:text-gray-300">{employeeData.employee.position}</p>
+                            <p className="text-gray-600 dark:text-gray-300">
+                                {employeeData.employee.position || 'N/A'}
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Record Attendance Button */}
-                <div className="flex justify-center">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
-                    >
-                        Record Attendance for {employeeData.employee.name}
-                    </button>
-                </div>
+                {/* Conditionally render Record Attendance Button if user is logged in */}
+                {localStorage.getItem('token') && (
+                    <div className="flex justify-center">
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
+                        >
+                            Record Attendance for {employeeData.employee.name}
+                        </button>
+                        <div className='px-2'></div>
+                        <Link
+                            to='/dashboard'
+                            className="px-5 py-2 bg-dark text-white rounded-md shadow hover:bg-outline-dark transition duration-200"
+                        >
+                            Go Back
+                        </Link>
+                    </div>
+                )}
             </div>
 
             {/* Enhanced Modal for Food Menu Selection */}
@@ -130,10 +141,11 @@ const EmployeeDetails = () => {
                             {foodMenus.map(menu => (
                                 <label
                                     key={menu.id}
-                                    className={`flex items-center p-3 border rounded-md cursor-pointer transition-colors ${selectedFoodMenuId === menu.id
+                                    className={`flex items-center p-3 border rounded-md cursor-pointer transition-colors ${
+                                        selectedFoodMenuId === menu.id
                                             ? 'bg-blue-100 border-blue-500'
                                             : 'hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700'
-                                        }`}
+                                    }`}
                                 >
                                     <input
                                         type="radio"
@@ -170,7 +182,7 @@ const EmployeeDetails = () => {
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
 
-export default EmployeeDetails
+export default EmployeeDetails;

@@ -334,7 +334,7 @@ const GetEmployees = () => {
                                         </td>
                                         <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                             {/* If you store department in 'position', adapt this: */}
-                                            {emp.department || emp.position || 'N/A'}
+                                            {emp.position || 'N/A'}
                                         </td>
                                         <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                             {emp.salary} RWF
