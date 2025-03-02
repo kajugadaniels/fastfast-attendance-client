@@ -90,22 +90,6 @@ const EmployeeDetails = () => {
         }
     };
 
-    const downloadQRCode = () => {
-        if (qrCodeRef.current) {
-            toPng(qrCodeRef.current)
-                .then(dataUrl => {
-                    const link = document.createElement('a');
-                    link.download = `employee_${employeeData?.employee?.id}_qr_code.png`;
-                    link.href = dataUrl;
-                    link.click();
-                })
-                .catch(error => {
-                    console.error('Error generating QR code image:', error);
-                    toast.error('Failed to download QR code.');
-                });
-        }
-    };
-
     // Download PDF for attendance history
     const downloadAttendancePDF = () => {
         if (attendanceRef.current) {
@@ -241,21 +225,6 @@ const EmployeeDetails = () => {
                         </Link>
                     </div>
                 )}
-            </div>
-
-            {/* QR Code Section */}
-            <div className="flex justify-center mt-6">
-                <div ref={qrCodeRef}>
-                    <QRCode value={qrCodeValue} size={128} />
-                </div>
-            </div>
-            <div className="mt-4 text-center">
-                <button
-                    onClick={downloadQRCode}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white"
-                >
-                    Download QR Code
-                </button>
             </div>
 
             {/* Attendance History Section */}
