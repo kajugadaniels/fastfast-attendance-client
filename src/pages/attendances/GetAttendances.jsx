@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import {
     ChevronLeft,
@@ -20,7 +20,7 @@ const GetAttendances = () => {
 
     // Filters & search
     const [searchTerm, setSearchTerm] = useState('')
-    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent" filter for today's record
+    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent"
     const [genderFilter, setGenderFilter] = useState('')
     const [positionFilter, setPositionFilter] = useState('')
     const [startDate, setStartDate] = useState('')
@@ -223,22 +223,20 @@ const GetAttendances = () => {
             effectiveEndDate = today
         }
 
-        // We create a temporary element to render the attendance table based on the effective filters
+        // Create a temporary element to render the attendance table based on effective filters
         const tempDiv = document.createElement('div')
         tempDiv.style.position = 'absolute'
         tempDiv.style.top = '-9999px'
         tempDiv.style.left = '-9999px'
-        tempDiv.style.width = '1000px' // Set a fixed width for PDF rendering
+        tempDiv.style.width = '1000px' // Fixed width for PDF rendering
 
-        // Generate HTML for the PDF table – we mimic the structure of the attendance table
+        // Generate HTML content for PDF – mimicking the attendance table structure
         let htmlContent = `
             <h2 style="text-align: center; font-family: Arial, sans-serif;">Attendance History</h2>
             <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; font-family: Arial, sans-serif; border-collapse: collapse;">
                 <thead>
                     <tr>
                         <th>Name</th>`
-
-        // Add headers for each day in the 7-day window
         daysArray.forEach(d => {
             htmlContent += `<th>${formatDate(d)}</th>`
         })
@@ -246,8 +244,7 @@ const GetAttendances = () => {
                 </thead>
                 <tbody>`
 
-        // For PDF, we filter attendanceData based on the effective start and end dates if no filters applied,
-        // otherwise use the already computed filteredData.
+        // For PDF: if no filters applied, consider only today's attendance; otherwise use filteredData.
         let pdfData
         if (noFiltersApplied) {
             const todayStr = effectiveStartDate
@@ -272,11 +269,10 @@ const GetAttendances = () => {
         htmlContent += `
                 </tbody>
             </table>`
-
         tempDiv.innerHTML = htmlContent
         document.body.appendChild(tempDiv)
 
-        // Use html-to-image to convert the temporary div to an image
+        // Convert the temporary div to an image then generate PDF
         toPng(tempDiv)
             .then(dataUrl => {
                 const pdf = new jsPDF('l', 'mm', 'a4')
@@ -325,6 +321,12 @@ const GetAttendances = () => {
                     className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full mb-2 mr-1 bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70"
                 >
                     Today Attendance
+                </button>
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full mb-2 mr-1 bg-pending border-pending text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70"
+                >
+                    Download Attendance PDF
                 </button>
             </div>
 
@@ -591,66 +593,6 @@ const GetAttendances = () => {
                         </nav>
                     </div>
                 )}
-            </div>
-
-            {/* Button to download Attendance Data as PDF based on filters */}
-            <div className="flex justify-center mt-4">
-                <button
-                    onClick={downloadAttendancePDF}
-                    className="px-5 py-2 bg-secondary text-white rounded-md shadow hover:bg-secondary-dark transition duration-200"
-                >
-                    Download Attendance PDF
-                </button>
-            </div>
-
-            {/* Enhanced Stunning Modal for Food Menu Selection */}
-            {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-1/3 p-8 transform transition-all duration-300">
-                        <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
-                            Select Food Menu
-                        </h3>
-                        <ul className="space-y-4 max-h-60 overflow-y-auto">
-                            {foodMenus.map(menu => (
-                                <li
-                                    key={menu.id}
-                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
-                                    onClick={() => setSelectedFoodMenu(menu)}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-800 dark:text-gray-100 font-medium">
-                                            {menu.name}
-                                        </span>
-                                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                                            {menu.price} RWF
-                                        </span>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="mt-8 flex justify-end space-x-4">
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAttendanceSubmit}
-                                className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
-                            >
-                                Submit Attendance
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex justify-end gap-4 mt-6">
-                <button onClick={() => setIsModalOpen(true)} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white">
-                    Record Today's Attendance
-                </button>
             </div>
         </>
     )
