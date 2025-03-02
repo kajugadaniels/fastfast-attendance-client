@@ -1,6 +1,7 @@
 import React from 'react'
 import { CookingPot, House, Speaker, UsersRound } from 'lucide-react'
 import { useLocation, NavLink } from 'react-router-dom'
+import Logo from '../assets/img/logo-icon.png'
 
 const Sidebar = () => {
     const { pathname } = useLocation()
@@ -16,10 +17,10 @@ const Sidebar = () => {
             <NavLink className="flex items-center pt-4 pl-5 intro-x" to="/dashboard">
                 <img
                     className="w-6"
-                    src="https://midone-html.left4code.com/dist/images/logo.svg"
+                    src={Logo}
                     alt="Logo"
                 />
-                <span className="hidden ml-3 text-lg text-white xl:block">CAPS</span>
+                <span className="hidden ml-3 text-lg text-white xl:block fs-16">FASTFAST</span>
             </NavLink>
             <div className="my-6 side-nav__divider"></div>
             <ul>

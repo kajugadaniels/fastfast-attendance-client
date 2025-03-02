@@ -287,6 +287,9 @@ const GetEmployees = () => {
                                         Salary
                                     </th>
                                     <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
+                                        Status
+                                    </th>
+                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
                                         Action
                                     </th>
                                 </tr>
@@ -335,6 +338,9 @@ const GetEmployees = () => {
                                         </td>
                                         <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                             {emp.salary} RWF
+                                        </td>
+                                        <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                            {emp.status}
                                         </td>
                                         <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                             <div className="flex items-center justify-center">

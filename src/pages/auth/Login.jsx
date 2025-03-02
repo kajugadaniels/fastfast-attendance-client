@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { loginUser } from '../../api'  // <--- import your API function
+import { loginUser } from '../../api'
+import Logo from '../../assets/img/logo-icon.png'
+import Welcome from '../../assets/img/welcome.svg'
 
 const Login = () => {
     const navigate = useNavigate()
@@ -60,16 +62,16 @@ const Login = () => {
                         <a className="-intro-x flex items-center pt-5" href="/">
                             <img
                                 className="w-6"
-                                src="https://midone-html.left4code.com/dist/images/logo.svg"
-                                alt="Midone - Tailwind Admin Dashboard Template"
+                                src={Logo}
+                                alt="FASTFAST FOOD"
                             />
-                            <span className="ml-3 text-lg text-white">Midone </span>
+                            <span className="ml-3 text-lg text-white">FASTFAST </span>
                         </a>
                         <div className="my-auto">
                             <img
                                 className="-intro-x -mt-16 w-1/2"
-                                src="https://midone-html.left4code.com/dist/images/illustration.svg"
-                                alt="Midone - Tailwind Admin Dashboard Template"
+                                src={Welcome}
+                                alt="FASTFAST FOOD"
                             />
                             <div className="-intro-x mt-10 text-4xl font-medium leading-tight text-white">
                                 A few more clicks to <br />
