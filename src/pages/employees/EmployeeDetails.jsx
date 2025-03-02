@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { ChevronLeft, ChevronRight, Edit, Eye } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
 const EmployeeDetails = () => {
     const { employeeId } = useParams();
@@ -28,6 +29,9 @@ const EmployeeDetails = () => {
     const [sortOption, setSortOption] = useState('dateDesc');
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
+
+    // Ref for attendance history section (for PDF download)
+    const attendanceRef = useRef();
 
     useEffect(() => {
         const getEmployeeDetails = async () => {
@@ -98,6 +102,26 @@ const EmployeeDetails = () => {
                 .catch(error => {
                     console.error('Error generating QR code image:', error);
                     toast.error('Failed to download QR code.');
+                });
+        }
+    };
+
+    // Download PDF for attendance history
+    const downloadAttendancePDF = () => {
+        if (attendanceRef.current) {
+            toPng(attendanceRef.current)
+                .then(dataUrl => {
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    // Calculate width and height for the image to fit A4 (210 x 297 mm)
+                    const imgProps = pdf.getImageProperties(dataUrl);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`employee_${employeeData?.employee?.id}_attendance_history.pdf`);
+                })
+                .catch(error => {
+                    console.error('Error generating PDF:', error);
+                    toast.error('Failed to download PDF.');
                 });
         }
     };
@@ -208,7 +232,7 @@ const EmployeeDetails = () => {
                         >
                             Record Attendance for {employeeData.employee.name}
                         </button>
-                        <div className='px-1'></div>
+                        <div className="px-1"></div>
                         <Link
                             to="/dashboard"
                             className="px-5 py-2 bg-dark text-white rounded-md shadow hover:bg-outline-dark transition duration-200"
@@ -219,8 +243,23 @@ const EmployeeDetails = () => {
                 )}
             </div>
 
+            {/* QR Code Section */}
+            <div className="flex justify-center mt-6">
+                <div ref={qrCodeRef}>
+                    <QRCode value={qrCodeValue} size={128} />
+                </div>
+            </div>
+            <div className="mt-4 text-center">
+                <button
+                    onClick={downloadQRCode}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white"
+                >
+                    Download QR Code
+                </button>
+            </div>
+
             {/* Attendance History Section */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-8 w-full max-w-4xl">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-8 w-full max-w-4xl" ref={attendanceRef}>
                 <div className="flex flex-col items-center justify-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center">
                         Attendance History
@@ -277,10 +316,10 @@ const EmployeeDetails = () => {
                                 <td className="px-5 py-3">
                                     {att.food_menu && att.food_menu.length > 0
                                         ? att.food_menu.map((menu, idx) => (
-                                            <div key={idx}>
-                                                {menu.name} - {menu.price} RWF
-                                            </div>
-                                        ))
+                                              <div key={idx}>
+                                                  {menu.name} - {menu.price} RWF
+                                              </div>
+                                          ))
                                         : 'N/A'}
                                 </td>
                             </tr>
@@ -340,6 +379,16 @@ const EmployeeDetails = () => {
                         Last
                     </button>
                 </div>
+            </div>
+
+            {/* Button to download Attendance History as PDF */}
+            <div className="flex justify-center mt-4">
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="px-5 py-2 bg-success text-white rounded-md shadow hover:bg-success-dark transition duration-200"
+                >
+                    Download Attendance PDF
+                </button>
             </div>
 
             {/* Enhanced Modal for Food Menu Selection */}
