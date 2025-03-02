@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { toast } from 'react-toastify'
 import {
     ChevronLeft,
@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { fetchAttendances, fetchFoodMenus } from '../../api'
 import { useNavigate } from 'react-router-dom'
+import { toPng } from 'html-to-image'
+import { jsPDF } from 'jspdf'
 
 const GetAttendances = () => {
     const navigate = useNavigate()
@@ -39,6 +41,12 @@ const GetAttendances = () => {
         d.setDate(d.getDate() + offset)
         return d
     })
+
+    // Added state to prevent error; if not needed, you can remove the "Record Today's Attendance" button.
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
+    // Ref for the attendance table container (for PDF download)
+    const attendanceRef = useRef()
 
     // Fetch attendance records (complete history)
     useEffect(() => {
@@ -204,6 +212,105 @@ const GetAttendances = () => {
         }
     }
 
+    // --------------------------------------
+    //  PDF Download Functionality
+    // --------------------------------------
+    const downloadAttendancePDF = () => {
+        // If no filters are applied, download only today's attendance
+        if (
+            searchTerm === '' &&
+            attendanceFilter === '' &&
+            genderFilter === '' &&
+            positionFilter === '' &&
+            startDate === '' &&
+            endDate === '' &&
+            foodMenuFilter === ''
+        ) {
+            const today = new Date().toISOString().split('T')[0]
+            const filteredToday = attendanceData.filter(emp => {
+                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === today)
+                return todayRecord && todayRecord.attendance_status === "Present"
+            })
+            // Build an HTML table string for today's attendance
+            let tableHTML = '<table style="width:100%; border-collapse: collapse;" border="1"><thead><tr><th>Name</th><th>Phone</th><th>Gender</th><th>Position</th><th>Attendance Date</th><th>Time</th><th>Food Menu</th></tr></thead><tbody>'
+            filteredToday.forEach(emp => {
+                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === today)
+                if (todayRecord) {
+                    const foodMenuStr = todayRecord.food_menu && todayRecord.food_menu.length > 0 ? todayRecord.food_menu.map(m => `${m.name} - ${m.price} RWF`).join(', ') : 'N/A'
+                    tableHTML += `<tr>
+                        <td>${emp.name}</td>
+                        <td>${emp.phone}</td>
+                        <td>${emp.gender || ''}</td>
+                        <td>${emp.position || ''}</td>
+                        <td>${todayRecord.attendance_date}</td>
+                        <td>${todayRecord.time || ''}</td>
+                        <td>${foodMenuStr}</td>
+                    </tr>`
+                }
+            })
+            tableHTML += '</tbody></table>'
+
+            // Create a temporary container for the table
+            const tempDiv = document.createElement('div')
+            tempDiv.style.position = 'absolute'
+            tempDiv.style.left = '-9999px'
+            tempDiv.innerHTML = tableHTML
+            document.body.appendChild(tempDiv)
+            toPng(tempDiv)
+                .then(dataUrl => {
+                    const pdf = new jsPDF('p', 'mm', 'a4')
+                    const pdfWidth = pdf.internal.pageSize.getWidth()
+                    const imgProps = pdf.getImageProperties(dataUrl)
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+                    pdf.save(`today_attendance.pdf`)
+                })
+                .catch(error => {
+                    console.error('Error generating PDF:', error)
+                    toast.error('Failed to download PDF.')
+                })
+                .finally(() => {
+                    document.body.removeChild(tempDiv)
+                })
+        } else {
+            // Otherwise, download the currently displayed attendance table
+            if (attendanceRef.current) {
+                toPng(attendanceRef.current)
+                    .then(dataUrl => {
+                        const pdf = new jsPDF('p', 'mm', 'a4')
+                        const pdfWidth = pdf.internal.pageSize.getWidth()
+                        const imgProps = pdf.getImageProperties(dataUrl)
+                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+                        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+                        pdf.save('attendance.pdf')
+                    })
+                    .catch(error => {
+                        console.error('Error generating PDF:', error)
+                        toast.error('Failed to download PDF.')
+                    })
+            }
+        }
+    }
+
+    if (loading) {
+        return <div className="text-center py-10">Loading attendance...</div>
+    }
+
+    if (error) {
+        return <div className="text-center py-10 text-red-500">{error}</div>
+    }
+
+    if (filteredData.length === 0) {
+        return (
+            <div className="text-center py-10">
+                <h3 className="text-lg font-medium">No Attendance Found</h3>
+                <p className="mt-2 text-slate-500 dark:text-slate-400">
+                    Looks like no employees match your criteria.
+                </p>
+            </div>
+        )
+    }
+
     return (
         <>
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
@@ -213,10 +320,17 @@ const GetAttendances = () => {
                 {/* Today Attendance Button */}
                 <button
                     onClick={handleTodayAttendance}
-                    // className="ml-4 px-4 py-2 bg-primary text-white rounded-md shadow hover:bg-indigo-700 transition duration-200"
                     className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70 rounded-full mb-2 mr-1"
                 >
                     Today Attendance
+                </button>
+
+                {/* Button to download Attendance PDF */}
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70 rounded-full mb-2 mr-1"
+                >
+                    Download Attendance PDF
                 </button>
             </div>
 
@@ -327,7 +441,7 @@ const GetAttendances = () => {
                     </div>
                 </div>
 
-                <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible">
+                <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible" ref={attendanceRef}>
                     {loading ? (
                         <div className="text-center py-10">Loading attendance...</div>
                     ) : error ? (
@@ -484,6 +598,49 @@ const GetAttendances = () => {
                     </div>
                 )}
             </div>
+
+            {/* Enhanced Stunning Modal for Food Menu Selection */}
+            {isModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-1/3 p-8 transform transition-all duration-300">
+                        <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
+                            Select Food Menu
+                        </h3>
+                        <ul className="space-y-4 max-h-60 overflow-y-auto">
+                            {foodMenus.map(menu => (
+                                <li
+                                    key={menu.id}
+                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
+                                    onClick={() => setSelectedFoodMenu(menu)}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-800 dark:text-gray-100 font-medium">
+                                            {menu.name}
+                                        </span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                                            {menu.price} RWF
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="mt-8 flex justify-end space-x-4">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAttendanceSubmit}
+                                className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white"
+                            >
+                                Submit Attendance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }
