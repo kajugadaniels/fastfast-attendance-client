@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { fetchEmployee, addAttendance, fetchFoodMenus } from '../../api';
 import { toast } from 'react-toastify';
-import { ChevronLeft, ChevronRight, Edit, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -188,7 +188,7 @@ const EmployeeDetails = () => {
                 </div>
 
                 {/* Employee Card */}
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6 mb-8">
                     <div className="mb-4 text-center">
                         <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
                             {employeeData.employee.name}
@@ -207,19 +207,18 @@ const EmployeeDetails = () => {
                     </div>
                 </div>
 
-                {/* Conditionally render Record Attendance Button if user is logged in */}
+                {/* Record Attendance & Go Back Buttons */}
                 {localStorage.getItem('token') && (
-                    <div className="flex justify-center space-x-4">
+                    <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
                         <button
                             onClick={() => setIsModalOpen(true)}
                             className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
                         >
                             Record Attendance for {employeeData.employee.name}
                         </button>
-                        <div className="px-1"></div>
                         <Link
                             to="/dashboard"
-                            className="px-5 py-2 bg-dark text-white rounded-md shadow hover:bg-outline-dark transition duration-200"
+                            className="px-5 py-2 bg-dark text-white rounded-md shadow hover:bg-outline-dark transition duration-200 text-center"
                         >
                             Go Back
                         </Link>
@@ -228,14 +227,14 @@ const EmployeeDetails = () => {
             </div>
 
             {/* Attendance History Section */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-8 w-full max-w-4xl" ref={attendanceRef}>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6 mt-8 w-full max-w-4xl" ref={attendanceRef}>
                 <div className="flex flex-col items-center justify-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center">
                         Attendance History
                     </h2>
                 </div>
-                <div className="mb-5 flex justify-between items-center border-b pb-5">
-                    <div className="flex gap-3">
+                <div className="mb-5 flex flex-col sm:flex-row justify-between items-center border-b pb-5 gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <input
                             type="date"
                             value={dateStart}
@@ -245,7 +244,7 @@ const EmployeeDetails = () => {
                             }}
                             className="input-date"
                         />
-                        <span className="text-slate-500">to</span>
+                        <span className="text-slate-500 self-center">to</span>
                         <input
                             type="date"
                             value={dateEnd}
@@ -255,78 +254,80 @@ const EmployeeDetails = () => {
                             }}
                             className="input-date"
                         />
-                        <select
-                            value={sortOption}
-                            onChange={e => {
-                                setSortOption(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="select-sort"
-                        >
-                            <option value="dateDesc">Date (Newest)</option>
-                            <option value="dateAsc">Date (Oldest)</option>
-                        </select>
                     </div>
+                    <select
+                        value={sortOption}
+                        onChange={e => {
+                            setSortOption(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="select-sort"
+                    >
+                        <option value="dateDesc">Date (Newest)</option>
+                        <option value="dateAsc">Date (Oldest)</option>
+                    </select>
                 </div>
 
-                <table className="w-full text-left">
-                    <thead>
-                        <tr>
-                            <th className="font-medium px-5 py-3">Date/Time</th>
-                            <th className="font-medium px-5 py-3">Attended</th>
-                            <th className="font-medium px-5 py-3">Food Menu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedAttendance.map(att => (
-                            <tr key={att.id} className="border-t">
-                                <td className="px-5 py-3">{formatDateTime(att.time)}</td>
-                                <td className="px-5 py-3">{att.attendance_status}</td>
-                                <td className="px-5 py-3">
-                                    {att.food_menu && att.food_menu.length > 0
-                                        ? att.food_menu.map((menu, idx) => (
-                                              <div key={idx}>
-                                                  {menu.name} - {menu.price} RWF
-                                              </div>
-                                          ))
-                                        : 'N/A'}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    {paginatedAttendance.length > 0 && (
-                        <tfoot>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
                             <tr>
-                                <td colSpan="3" className="font-medium px-5 py-3 border-t text-right">
-                                    Total Earnings:{' '}
-                                    {paginatedAttendance
-                                        .reduce((sum, att) => {
-                                            if (att.attendance_status === 'Present' && att.food_menu && att.food_menu.length > 0) {
-                                                return sum + parseFloat(att.food_menu[0].price);
-                                            }
-                                            return sum;
-                                        }, 0)
-                                        .toFixed(2)}{' '}
-                                    RWF
-                                </td>
+                                <th className="font-medium px-5 py-3">Date/Time</th>
+                                <th className="font-medium px-5 py-3">Attended</th>
+                                <th className="font-medium px-5 py-3">Food Menu</th>
                             </tr>
-                        </tfoot>
-                    )}
-                </table>
+                        </thead>
+                        <tbody>
+                            {paginatedAttendance.map(att => (
+                                <tr key={att.id} className="border-t">
+                                    <td className="px-5 py-3">{formatDateTime(att.time)}</td>
+                                    <td className="px-5 py-3">{att.attendance_status}</td>
+                                    <td className="px-5 py-3">
+                                        {att.food_menu && att.food_menu.length > 0
+                                            ? att.food_menu.map((menu, idx) => (
+                                                  <div key={idx}>
+                                                      {menu.name} - {menu.price} RWF
+                                                  </div>
+                                              ))
+                                            : 'N/A'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        {paginatedAttendance.length > 0 && (
+                            <tfoot>
+                                <tr>
+                                    <td colSpan="3" className="font-medium px-5 py-3 border-t text-right">
+                                        Total Earnings:{' '}
+                                        {paginatedAttendance
+                                            .reduce((sum, att) => {
+                                                if (att.attendance_status === 'Present' && att.food_menu && att.food_menu.length > 0) {
+                                                    return sum + parseFloat(att.food_menu[0].price);
+                                                }
+                                                return sum;
+                                            }, 0)
+                                            .toFixed(2)}{' '}
+                                        RWF
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        )}
+                    </table>
+                </div>
 
                 {/* Pagination */}
-                <div className="flex justify-center mt-4">
+                <div className="flex flex-wrap justify-center mt-4 gap-2">
                     <button
                         onClick={() => handlePageChange(1)}
                         disabled={currentPage === 1}
-                        className="btn-pagination"
+                        className="btn-pagination px-3 py-1"
                     >
                         First
                     </button>
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="btn-pagination"
+                        className="btn-pagination px-3 py-1"
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -336,14 +337,14 @@ const EmployeeDetails = () => {
                     <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="btn-pagination"
+                        className="btn-pagination px-3 py-1"
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
                     <button
                         onClick={() => handlePageChange(totalPages)}
                         disabled={currentPage === totalPages}
-                        className="btn-pagination"
+                        className="btn-pagination px-3 py-1"
                     >
                         Last
                     </button>
@@ -363,38 +364,38 @@ const EmployeeDetails = () => {
             {/* Enhanced Modal for Food Menu Selection */}
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-1/3 p-8 transform transition-all duration-300">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-11/12 sm:w-1/3 p-4 sm:p-8 transform transition-all duration-300">
                         <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
                             Select Food Menu
                         </h3>
                         <ul className="space-y-4 max-h-60 overflow-y-auto">
-                        {foodMenus.map(menu => (
-                            <li
-                                key={menu.id}
-                                className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
-                            >
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="foodMenu"
-                                        value={menu.id}
-                                        checked={selectedFoodMenuId === menu.id}
-                                        onChange={() => setSelectedFoodMenuId(menu.id)}
-                                        className="mr-2"
-                                    />
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="text-gray-800 dark:text-gray-100 font-medium">
-                                            {menu.name}
-                                        </span>
-                                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                                            {menu.price} RWF
-                                        </span>
-                                    </div>
-                                </label>
-                            </li>
-                        ))}
+                            {foodMenus.map(menu => (
+                                <li
+                                    key={menu.id}
+                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
+                                >
+                                    <label className="flex items-center cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="foodMenu"
+                                            value={menu.id}
+                                            checked={selectedFoodMenuId === menu.id}
+                                            onChange={() => setSelectedFoodMenuId(menu.id)}
+                                            className="mr-2"
+                                        />
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="text-gray-800 dark:text-gray-100 font-medium">
+                                                {menu.name}
+                                            </span>
+                                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                                                {menu.price} RWF
+                                            </span>
+                                        </div>
+                                    </label>
+                                </li>
+                            ))}
                         </ul>
-                        <div className="mt-8 flex justify-end space-x-4">
+                        <div className="mt-8 flex flex-col sm:flex-row justify-end gap-4">
                             <button
                                 onClick={() => setIsModalOpen(false)}
                                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
