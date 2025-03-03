@@ -368,13 +368,21 @@ const EmployeeDetails = () => {
                             Select Food Menu
                         </h3>
                         <ul className="space-y-4 max-h-60 overflow-y-auto">
-                            {foodMenus.map(menu => (
-                                <li
-                                    key={menu.id}
-                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
-                                    onClick={() => setSelectedFoodMenuId(menu.id)}
-                                >
-                                    <div className="flex justify-between items-center">
+                        {foodMenus.map(menu => (
+                            <li
+                                key={menu.id}
+                                className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
+                            >
+                                <label className="flex items-center cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="foodMenu"
+                                        value={menu.id}
+                                        checked={selectedFoodMenuId === menu.id}
+                                        onChange={() => setSelectedFoodMenuId(menu.id)}
+                                        className="mr-2"
+                                    />
+                                    <div className="flex justify-between items-center w-full">
                                         <span className="text-gray-800 dark:text-gray-100 font-medium">
                                             {menu.name}
                                         </span>
@@ -382,8 +390,9 @@ const EmployeeDetails = () => {
                                             {menu.price} RWF
                                         </span>
                                     </div>
-                                </li>
-                            ))}
+                                </label>
+                            </li>
+                        ))}
                         </ul>
                         <div className="mt-8 flex justify-end space-x-4">
                             <button

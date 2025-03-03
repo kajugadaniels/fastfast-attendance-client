@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { ChartBar, CircleX, House, Speaker, UsersRound } from 'lucide-react'
 import { useLocation, NavLink } from 'react-router-dom'
+import Logo from '../assets/img/logo-icon.png'
 
 const MobileMenu = () => {
     const { pathname } = useLocation()
@@ -30,7 +31,7 @@ const MobileMenu = () => {
                 <NavLink className="mr-auto flex" to="/dashboard" onClick={handleLinkClick}>
                     <img
                         className="w-6"
-                        src="https://midone-html.left4code.com/dist/images/logo.svg"
+                        src={Logo}
                         alt="Logo"
                     />
                 </NavLink>
