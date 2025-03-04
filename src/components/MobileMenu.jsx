@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChartBar, CircleX, House, Speaker, UsersRound } from 'lucide-react'
+import { ChartBar, CircleX, CookingPot, House, Speaker, UsersRound } from 'lucide-react'
 import { useLocation, NavLink } from 'react-router-dom'
 import Logo from '../assets/img/logo-icon.png'
 
@@ -8,6 +8,7 @@ const MobileMenu = () => {
     const [isMenuActive, setIsMenuActive] = useState(false)
 
     const isDashboardActive = pathname === '/dashboard'
+    const isFoodMenuActive = pathname.startsWith('/food-menus') || pathname.startsWith('/food-menu')
     const isEmployeesActive = pathname.startsWith('/employees') || pathname.startsWith('/employee')
     const isAttendanceActive = pathname === '/attendance'
 
@@ -45,7 +46,7 @@ const MobileMenu = () => {
                     </a>
                 )}
             </div>
-            <div className="scrollable h-screen z-20 top-0 left-0 w-[270px] -ml-[100%] bg-primary transition-all duration-300 ease-in-out dark:bg-darkmode-800 [&[data-simplebar]]:fixed [&_.simplebar-scrollbar]:before:bg-black/50 group-[.mobile-menu--active]:ml-0">
+            <div className="scrollable z-20 top-0 left-0 w-[270px] -ml-[100%] bg-primary transition-all duration-300 ease-in-out dark:bg-darkmode-800 [&[data-simplebar]]:fixed [&_.simplebar-scrollbar]:before:bg-black/50 group-[.mobile-menu--active]:ml-0">
                 {isMenuActive && (
                     <a
                         href="#"
@@ -68,6 +69,20 @@ const MobileMenu = () => {
                                 <House className="stroke-1.5 w-5 h-5" />
                             </div>
                             <div className="menu__title">Dashboard</div>
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink
+                            to="/food-menus"
+                            className={() =>
+                                `menu ${isFoodMenuActive ? 'side-menu--active' : ''}`
+                            }
+                            onClick={handleLinkClick}
+                        >
+                            <div className="menu__icon">
+                                <CookingPot className="stroke-1.5 w-5 h-5" />
+                            </div>
+                            <div className="menu__title">Food Menus</div>
                         </NavLink>
                     </li>
                     <li>
