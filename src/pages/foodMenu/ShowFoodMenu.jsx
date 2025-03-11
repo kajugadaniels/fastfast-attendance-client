@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchFoodMenu } from '../../api'
@@ -19,9 +19,9 @@ const ShowFoodMenu = () => {
     const [filterGender, setFilterGender] = useState('')
     const [filterPosition, setFilterPosition] = useState('')
 
-    // Pagination state for the Employees table
+    // Pagination state for the Employees table (5 rows per page)
     const [currentPage, setCurrentPage] = useState(1)
-    const pageSize = 10
+    const pageSize = 5
 
     useEffect(() => {
         const getFoodMenuDetails = async () => {
@@ -84,10 +84,6 @@ const ShowFoodMenu = () => {
     }
 
     // Download Attendance History as a professional PDF Report.
-    // The report includes:
-    // - A header with company information.
-    // - A report title and summary including the filter date range, total consumed amount, and the food menu name.
-    // - A table with columns: Employee Name and Attendance Date.
     const downloadAttendancePDF = () => {
         // Flatten the filtered attendance records from all employees.
         const pdfRows = []
@@ -141,7 +137,6 @@ const ShowFoodMenu = () => {
         // Display Food Menu Name in the report
         doc.text(`Food Menu: ${data.food_menu.name}`, margin, y)
         y += 10
-        // Display Food Menu Name in the report
         doc.text(`Food Price: ${data.food_menu.price} RWF`, margin, y)
         y += 10
 
