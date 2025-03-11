@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { fetchEmployees, fetchAttendances, fetchFoodMenus } from '../api';
 import { Line, Bar } from 'react-chartjs-2';
-import { Link } from 'react-router-dom'
-import { CookingPot, RefreshCw, UserCheck, UserSquare } from 'lucide-react'
+import { Link } from 'react-router-dom';
+import { CookingPot, RefreshCw, UserCheck, UserSquare } from 'lucide-react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -59,6 +59,11 @@ const Dashboard = () => {
 
     // Get current date in YYYY-MM-DD format
     const currentDate = new Date().toISOString().split('T')[0];
+
+    // Helper function to format a date object to "YYYY-MM-DD"
+    const formatDate = (dateObj) => {
+        return dateObj.toISOString().split('T')[0];
+    };
 
     // --------------------------------------------
     // Attendance Summary for Today (by Food Menu)
@@ -226,6 +231,12 @@ const Dashboard = () => {
     );
     const latest5Records = latestAttendanceRecords.slice(0, 5);
 
+    // --------------------------------------------
+    // Table: Today's Food Menu Consumption
+    // --------------------------------------------
+    // For the current date, use foodMenuSummary to calculate total amount per food menu.
+    const todayFoodMenuConsumption = Object.entries(foodMenuSummary);
+
     if (loading) {
         return <div className="text-center py-10">Loading dashboard...</div>;
     }
@@ -276,15 +287,14 @@ const Dashboard = () => {
                                             <UserSquare className="stroke-1.5 h-[28px] w-[28px] text-warning" />
                                         </div>
                                         <div className="mt-6 text-3xl font-medium leading-8">{employees.length}</div>
-                                        <div className="mt-1 text-base text-slate-500">
-                                            Total Employees
-                                        </div>
+                                        <div className="mt-1 text-base text-slate-500">Total Employees</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    {/* Monthly Attendance Trend */}
                     <div className="col-span-12 mt-8 lg:col-span-6">
                         <div className="intro-y block h-10 items-center sm:flex">
                             <h2 className="mr-5 truncate text-lg font-medium">Monthly Attendance Trend</h2>
@@ -310,6 +320,7 @@ const Dashboard = () => {
                         </div>
                     </div>
 
+                    {/* Employees by Food Menu */}
                     <div className="col-span-12 mt-8 sm:col-span-6 lg:col-span-6">
                         <div className="intro-y flex h-10 items-center">
                             <h2 className="mr-5 truncate text-lg font-medium">
@@ -336,50 +347,92 @@ const Dashboard = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div className="col-span-12 2xl:col-span-3">
-                <div className="-mb-10 pb-10 2xl:border-l">
-                    <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
-                        <div className="col-span-12 mt-3 md:col-span-6 xl:col-span-4 2xl:col-span-12 2xl:mt-8">
-                            <div className="intro-x flex h-10 items-center">
-                                <h2 className="mr-5 truncate text-lg font-medium">
-                                    Latest 5 Attended Employees
-                                </h2>
-                            </div>
-                            {latest5Records.length > 0 ? (
-                                <div className="mt-5">
-                                    {latest5Records.map((record, index) => (
-                                        <div className="intro-x">
-                                            <div className="box zoom-in mb-3 flex items-center px-5 py-3">
-                                                <div className="image-fit h-10 w-10 flex-none overflow-hidden rounded-full">
-                                                    <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" alt="" />
-                                                </div>
-                                                <div className="ml-4 mr-auto">
-                                                    <div className="font-medium">
-                                                        {record.name}
-                                                    </div>
-                                                    <div className="mt-0.5 text-xs text-slate-500">
-                                                        {record.attendance_date}
-                                                    </div>
-                                                </div>
-                                                <div className="text-success">
-                                                    {record.price} RWF
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <Link className="intro-x block w-full rounded-md border border-dotted border-slate-400 py-3 text-center text-slate-500 dark:border-darkmode-300" to="/attendance">
-                                        View More
-                                    </Link>
-                                </div>
-                            ) : (
-                                <p>No recent attendance records found.</p>
-                            )}
+                    {/* Today's Food Menu Consumption Table */}
+                    <div className="col-span-12 mt-8">
+                        <div className="intro-y flex h-10 items-center">
+                            <h2 className="mr-5 truncate text-lg font-medium">
+                                Today's Food Menu Consumption
+                            </h2>
+                        </div>
+                        <div className="intro-y box mt-5 p-5">
+                            <table className="min-w-full table-auto border-collapse">
+                                <thead>
+                                    <tr>
+                                        <th className="px-4 py-2 border">Food Menu</th>
+                                        <th className="px-4 py-2 border">Number of Employees</th>
+                                        <th className="px-4 py-2 border">Total Amount (RWF)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {todayFoodMenuConsumption = Object.entries(foodMenuSummary).map(([menuName, summary]) => {
+                                        const totalAmount = summary.count * parseFloat(summary.price);
+                                        return (
+                                            <tr key={menuName} className="border-t">
+                                                <td className="px-4 py-2">{menuName}</td>
+                                                <td className="px-4 py-2">{summary.count}</td>
+                                                <td className="px-4 py-2">{totalAmount.toFixed(2)}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
+
+                <div className="col-span-12 2xl:col-span-3">
+                    <div className="-mb-10 pb-10 2xl:border-l">
+                        <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
+                            <div className="col-span-12 mt-3 md:col-span-6 xl:col-span-4 2xl:col-span-12 2xl:mt-8">
+                                <div className="intro-x flex h-10 items-center">
+                                    <h2 className="mr-5 truncate text-lg font-medium">
+                                        Latest 5 Attended Employees
+                                    </h2>
+                                </div>
+                                {latest5Records.length > 0 ? (
+                                    <div className="mt-5">
+                                        {latest5Records.map((record, index) => (
+                                            <div key={index} className="intro-x">
+                                                <div className="box zoom-in mb-3 flex items-center px-5 py-3">
+                                                    <div className="image-fit h-10 w-10 flex-none overflow-hidden rounded-full">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" alt="" />
+                                                    </div>
+                                                    <div className="ml-4 mr-auto">
+                                                        <div className="font-medium">
+                                                            {record.name}
+                                                        </div>
+                                                        <div className="mt-0.5 text-xs text-slate-500">
+                                                            {record.attendance_date}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-success">
+                                                        {record.price} RWF
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <Link className="intro-x block w-full rounded-md border border-dotted border-slate-400 py-3 text-center text-slate-500 dark:border-darkmode-300" to="/attendance">
+                                            View More
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <p>No recent attendance records found.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Button to download Attendance Data as PDF based on filters */}
+            <div className="flex justify-center mt-4">
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="px-5 py-2 bg-secondary text-white rounded-md shadow hover:bg-secondary-dark transition duration-200"
+                >
+                    Download Attendance PDF
+                </button>
             </div>
         </div>
     );
