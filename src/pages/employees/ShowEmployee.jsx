@@ -15,12 +15,10 @@ const ShowEmployee = () => {
     const [foodMenus, setFoodMenus] = useState([]) // Holds food menu options
     const [loading, setLoading] = useState(true)
     const [attendanceStatus, setAttendanceStatus] = useState('')
-    
-    // Initialize date filters with current date so that by default only today's data is shown
+    // Default date filters set to current date so that only today's attendance is shown by default.
     const currentDate = new Date().toISOString().split('T')[0]
     const [dateStart, setDateStart] = useState(currentDate)
     const [dateEnd, setDateEnd] = useState(currentDate)
-    
     const [sortOption, setSortOption] = useState('dateDesc')
     const [message, setMessage] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false) // Controls modal visibility
@@ -185,11 +183,11 @@ const ShowEmployee = () => {
     }
 
     if (loading) {
-        return <div>Loading employee details...</div>
+        return <div className="text-center py-10">Loading employee details...</div>
     }
     if (!employeeData) {
         return (
-            <div className="text-center">
+            <div className="text-center py-10">
                 <h2>No Employee Data</h2>
                 <button onClick={handleGoBack} className="btn-primary">
                     Go Back
@@ -259,7 +257,10 @@ const ShowEmployee = () => {
                         </div>
                     </div>
                     <div className="mt-4 text-center">
-                        <button onClick={downloadQRCode} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white">
+                        <button
+                            onClick={downloadQRCode}
+                            className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-primary border-primary text-white"
+                        >
                             Download QR Code
                         </button>
                     </div>
@@ -275,8 +276,8 @@ const ShowEmployee = () => {
                                     type="date"
                                     value={dateStart}
                                     onChange={e => {
-                                        setDateStart(e.target.value);
-                                        setCurrentPage(1);
+                                        setDateStart(e.target.value)
+                                        setCurrentPage(1)
                                     }}
                                     className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
                                 />
@@ -285,16 +286,16 @@ const ShowEmployee = () => {
                                     type="date"
                                     value={dateEnd}
                                     onChange={e => {
-                                        setDateEnd(e.target.value);
-                                        setCurrentPage(1);
+                                        setDateEnd(e.target.value)
+                                        setCurrentPage(1)
                                     }}
                                     className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
                                 />
                                 <select
                                     value={sortOption}
                                     onChange={e => {
-                                        setSortOption(e.target.value);
-                                        setCurrentPage(1);
+                                        setSortOption(e.target.value)
+                                        setCurrentPage(1)
                                     }}
                                     className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
                                 >
@@ -320,10 +321,10 @@ const ShowEmployee = () => {
                                         <td className="px-5 py-3">
                                             {att.food_menu && att.food_menu.length > 0
                                                 ? att.food_menu.map((menu, idx) => (
-                                                      <div key={idx}>
-                                                          {menu.name} - {menu.price} RWF
-                                                      </div>
-                                                  ))
+                                                    <div key={idx}>
+                                                        {menu.name} - {menu.price} RWF
+                                                    </div>
+                                                ))
                                                 : "N/A"}
                                         </td>
                                     </tr>
@@ -331,7 +332,7 @@ const ShowEmployee = () => {
                             </tbody>
                         </table>
 
-                        {/* Pagination Controls */}
+                        {/* Pagination Controls for Attendance History */}
                         {totalPages > 1 && (
                             <div className="flex justify-center mt-4">
                                 <button
@@ -373,7 +374,10 @@ const ShowEmployee = () => {
 
             {/* Actions */}
             <div className="flex justify-end gap-4 mt-6">
-                <button onClick={() => setIsModalOpen(true)} className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white"
+                >
                     Record Today's Attendance
                 </button>
                 <button
@@ -383,8 +387,51 @@ const ShowEmployee = () => {
                     Download Attendance PDF
                 </button>
             </div>
+
+            {/* Attendance Record Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-1/3 p-8 transform transition-all duration-300">
+                        <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
+                            Select Food Menu
+                        </h3>
+                        <ul className="space-y-4 max-h-60 overflow-y-auto">
+                            {foodMenus.map(menu => (
+                                <li
+                                    key={menu.id}
+                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
+                                    onClick={() => setSelectedFoodMenu(menu)}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-800 dark:text-gray-100 font-medium">
+                                            {menu.name}
+                                        </span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                                            {menu.price} RWF
+                                        </span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="mt-8 flex justify-end space-x-4">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAttendanceSubmit}
+                                className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
+                            >
+                                Submit Attendance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
 
-export default ShowEmployee;
+export default ShowEmployee
