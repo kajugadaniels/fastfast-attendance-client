@@ -29,7 +29,8 @@ const ShowEmployee = () => {
     // Now we generate PDF programmatically so we don't rely on the DOM.
     const attendanceRef = useRef()
 
-    const pageSize = 10
+    // Pagination state for attendance history (5 rows per page)
+    const pageSize = 5
     const [currentPage, setCurrentPage] = useState(1)
 
     // QR code URL based on employee id
