@@ -74,17 +74,8 @@ const ShowFoodMenu = () => {
         }
     }
 
-    // Compute the total consumed amount from the filtered attendance histories.
-    // For each employee, each attendance record's food menu price is added.
-    const totalConsumedAmount = filteredEmployees.reduce((sum, emp) => {
-        const empTotal = emp.filteredAttendance.reduce((empSum, att) => {
-            if (att.food_menu && att.food_menu.length > 0) {
-                return empSum + parseFloat(att.food_menu[0].price)
-            }
-            return empSum
-        }, 0)
-        return sum + empTotal
-    }, 0).toFixed(2)
+    // Calculate the alternate total amount: count of filtered employees * food_menu.price
+    const alternateTotal = (filteredEmployees.length * parseFloat(data?.food_menu.price || 0)).toFixed(2)
 
     // Helper: Format date/time (if needed)
     const formatDateTime = (dateStr) => {
@@ -118,7 +109,7 @@ const ShowFoodMenu = () => {
 
             {/* Food Menu Info */}
             <div className="grid grid-cols-12 gap-6 mt-6">
-                <div className="col-span-12 lg:col-span-4 box p-5">
+                <div className="col-span-12 lg:col-span-3 box p-5">
                     <div className="mb-5 border-b pb-5">
                         <span className="text-base font-medium">Food Menu Info</span>
                     </div>
@@ -131,13 +122,19 @@ const ShowFoodMenu = () => {
                             <span className="text-sm">Price:</span>
                             <span>{food_menu.price} RWF</span>
                         </div>
+                        <div className="flex justify-between">
+                            <span className="text-sm">Total amount consumed:</span>
+                            <span>
+                                {alternateTotal} RWF
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Employees with Attendance History */}
-                <div className="col-span-12 lg:col-span-7 2xl:col-span-8">
+                <div className="col-span-12 lg:col-span-7 2xl:col-span-9">
                     <div className="box rounded-md p-5">
-                        {/* Filters */}
+                        {/* Filter Bar */}
                         <div className="mb-5 flex flex-col sm:flex-row items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
                             <div className="ml-auto flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                                 <input
@@ -183,12 +180,20 @@ const ShowFoodMenu = () => {
                                     <option value="Umufundi">Umufundi</option>
                                     <option value="Umuyede">Umuyede</option>
                                 </select>
+                                <select
+                                    value={filterGender}
+                                    onChange={(e) => {
+                                        setFilterGender(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
+                                >
+                                    <option value="">All Genders</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
                             </div>
-                        </div>
-                        {/* Total Consumed Amount Summary */}
-                        <div className="mb-4 text-right">
-                            <span className="text-lg font-semibold">Total Consumed Amount: </span>
-                            <span className="text-xl font-bold text-secondary">{totalConsumedAmount} RWF</span>
                         </div>
                         {/* Employees Table */}
                         {paginatedEmployees.length > 0 ? (
@@ -208,7 +213,7 @@ const ShowFoodMenu = () => {
                                             <td className="px-5 py-3">{emp.name}</td>
                                             <td className="px-5 py-3">{emp.phone}</td>
                                             <td className="px-5 py-3">{emp.gender}</td>
-                                            <td className="px-5 py-3">{emp.position}</td>
+                                            <td className="px-5 py-3">{emp.position || 'N/A'}</td>
                                             <td className="px-5 py-3">
                                                 {emp.filteredAttendance && emp.filteredAttendance.length > 0 ? (
                                                     <div className="space-y-2">
@@ -217,15 +222,17 @@ const ShowFoodMenu = () => {
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
                                                                 </div>
-                                                                <div className="text-sm">
-                                                                    <strong>Status:</strong> {att.attendance_status}
-                                                                </div>
-                                                                <div className="text-sm">
-                                                                    <strong>Food Menu:</strong>{" "}
-                                                                    {att.food_menu && att.food_menu.length > 0
-                                                                        ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
-                                                                        : "N/A"}
-                                                                </div>
+                                                                {/*
+                                                                    <div className="text-sm">
+                                                                        <strong>Status:</strong> {att.attendance_status}
+                                                                    </div>
+                                                                    <div className="text-sm">
+                                                                        <strong>Food Menu:</strong>{" "}
+                                                                        {att.food_menu && att.food_menu.length > 0
+                                                                            ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
+                                                                            : "N/A"}
+                                                                    </div>
+                                                                */}
                                                             </div>
                                                         ))}
                                                     </div>
