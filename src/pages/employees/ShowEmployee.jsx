@@ -230,7 +230,21 @@ const ShowEmployee = () => {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-sm">Position:</span>
-                            <span>{employeeData.employee.position}</span>
+                            <span>{employeeData.employee.position || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-sm">Total amount consumed:</span>
+                            <span>
+                                    {paginatedAttendance
+                                        .reduce((sum, att) => {
+                                            if (att.attendance_status === "Present" && att.food_menu && att.food_menu.length > 0) {
+                                                return sum + parseFloat(att.food_menu[0].price)
+                                            }
+                                            return sum
+                                        }, 0)
+                                        .toFixed(2)}{" "}
+                                    RWF
+                            </span>
                         </div>
                     </div>
 
@@ -311,24 +325,6 @@ const ShowEmployee = () => {
                                     </tr>
                                 ))}
                             </tbody>
-                            {paginatedAttendance.length > 0 && (
-                                <tfoot>
-                                    <tr>
-                                        <td colSpan="3" className="font-medium px-5 py-3 border-t text-right">
-                                            Total Earnings:{" "}
-                                            {paginatedAttendance
-                                                .reduce((sum, att) => {
-                                                    if (att.attendance_status === "Present" && att.food_menu && att.food_menu.length > 0) {
-                                                        return sum + parseFloat(att.food_menu[0].price)
-                                                    }
-                                                    return sum
-                                                }, 0)
-                                                .toFixed(2)}{" "}
-                                            RWF
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            )}
                         </table>
 
                         {/* Pagination */}
