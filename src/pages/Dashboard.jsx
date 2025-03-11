@@ -171,7 +171,12 @@ const Dashboard = () => {
     attendanceData.forEach(emp => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
             emp.attendance_history.forEach(record => {
-                if (record.food_menu && record.food_menu.length > 0) {
+                if (
+                    record.attendance_date === currentDate &&
+                    record.attendance_status === 'Present' &&
+                    record.food_menu &&
+                    record.food_menu.length > 0
+                ) {
                     const menuName = record.food_menu[0].name;
                     if (!foodMenuEmployeeAssignment[menuName]) {
                         foodMenuEmployeeAssignment[menuName] = new Set();
@@ -187,6 +192,7 @@ const Dashboard = () => {
     });
     const foodMenuGraphLabels = Object.keys(foodMenuEmployeeCounts);
     const foodMenuGraphData = Object.values(foodMenuEmployeeCounts);
+
     const foodMenuChartData = {
         labels: foodMenuGraphLabels,
         datasets: [
@@ -399,7 +405,7 @@ const Dashboard = () => {
                                                 legend: { position: 'top' },
                                                 title: {
                                                     display: true,
-                                                    text: 'Unique Employee Distribution by Food Menu',
+                                                    text: 'Unique Employee Distribution by Food Menu (Today)',
                                                 },
                                             },
                                         }}
