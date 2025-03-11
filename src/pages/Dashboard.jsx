@@ -39,6 +39,10 @@ const Dashboard = () => {
     const [consumptionStartDate, setConsumptionStartDate] = useState(currentDate);
     const [consumptionEndDate, setConsumptionEndDate] = useState(currentDate);
 
+    // New state for consumption table pagination
+    const [consumptionCurrentPage, setConsumptionCurrentPage] = useState(1);
+    const consumptionPageSize = 10;
+
     // Fetch employees, attendance data, and food menus on component mount
     useEffect(() => {
         const fetchAllData = async () => {
@@ -70,7 +74,6 @@ const Dashboard = () => {
     // --------------------------------------------
     // Attendance Summary for Today (by Food Menu)
     // --------------------------------------------
-    // (This is still computed based on currentDate)
     const todayAttendanceRecords = attendanceData.reduce((acc, emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
             const todayRecord = emp.attendance_history.find(
@@ -260,6 +263,7 @@ const Dashboard = () => {
             name: menu.name,
             count: summary.count,
             totalAmount: totalAmount.toFixed(2),
+            price: menu.price,
         };
     });
 
@@ -267,6 +271,22 @@ const Dashboard = () => {
     const totalConsumptionAmount = consumptionTableData
         .reduce((sum, item) => sum + parseFloat(item.totalAmount), 0)
         .toFixed(2);
+
+    // --------------- Pagination for Food Menu Consumption ---------------
+    const [consumptionCurrentPage, setConsumptionCurrentPage] = useState(1);
+    const consumptionPageSize = 10;
+    const totalConsumptionRecords = consumptionTableData.length;
+    const totalConsumptionPages = Math.ceil(totalConsumptionRecords / consumptionPageSize);
+    const consumptionPaginatedData = consumptionTableData.slice(
+        (consumptionCurrentPage - 1) * consumptionPageSize,
+        consumptionCurrentPage * consumptionPageSize
+    );
+
+    const handleConsumptionPageChange = (page) => {
+        if (page >= 1 && page <= totalConsumptionPages) {
+            setConsumptionCurrentPage(page);
+        }
+    };
 
     if (loading) {
         return <div className="text-center py-10">Loading dashboard...</div>;
@@ -391,28 +411,33 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Today's Food Menu Consumption Table with Date Range Filters */}
-                    <div className="col-span-12 mt-8">
-                        <div className="intro-y flex h-10 items-center">
+                    {/* Food Menu Consumption (Filtered) Table with Date Range Filters & Pagination */}
+                    <div className="col-span-12 mt-6">
+                        <div className="intro-y flex h-10 items-center sm:flex">
                             <h2 className="mr-5 truncate text-lg font-medium">
                                 Food Menu Consumption (Filtered)
                             </h2>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="text-sm text-slate-700">From:</span>
-                            <input
-                                type="date"
-                                value={consumptionStartDate}
-                                onChange={e => setConsumptionStartDate(e.target.value)}
-                                className="w-40 border rounded-md p-2"
-                            />
-                            <span className="text-sm text-slate-700">To:</span>
-                            <input
-                                type="date"
-                                value={consumptionEndDate}
-                                onChange={e => setConsumptionEndDate(e.target.value)}
-                                className="w-40 border rounded-md p-2"
-                            />
+                            <div className="mt-3 flex items-center sm:ml-auto sm:mt-0">
+                                <input
+                                    type="date"
+                                    value={consumptionStartDate}
+                                    onChange={e => {
+                                        setConsumptionStartDate(e.target.value);
+                                        setConsumptionCurrentPage(1);
+                                    }}
+                                    className="w-40 border rounded-md p-2"
+                                />
+                                <span className="text-sm text-slate-700">To:</span>
+                                <input
+                                    type="date"
+                                    value={consumptionEndDate}
+                                    onChange={e => {
+                                        setConsumptionEndDate(e.target.value);
+                                        setConsumptionCurrentPage(1);
+                                    }}
+                                    className="w-40 border rounded-md p-2"
+                                />
+                            </div>
                         </div>
                         <div className="intro-y box mt-5 p-5">
                             <table className="min-w-full table-auto border-collapse">
@@ -424,7 +449,7 @@ const Dashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {consumptionTableData.map(item => (
+                                    {consumptionPaginatedData.map(item => (
                                         <tr key={item.name} className="border-t">
                                             <td className="px-4 py-2">{item.name}</td>
                                             <td className="px-4 py-2">{item.count}</td>
@@ -434,6 +459,56 @@ const Dashboard = () => {
                                 </tbody>
                             </table>
                         </div>
+                        {/* Consumption Table Pagination */}
+                        {totalConsumptionPages > 1 && (
+                            <div className="intro-y mt-3 flex flex-wrap items-center sm:flex-row sm:flex-nowrap">
+                                <nav className="w-full sm:mr-auto sm:w-auto">
+                                    <ul className="flex w-full mr-0 sm:mr-auto sm:w-auto gap-2">
+                                        <li>
+                                            <button
+                                                onClick={() => handleConsumptionPageChange(1)}
+                                                disabled={consumptionCurrentPage === 1}
+                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                            >
+                                                First
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={() => handleConsumptionPageChange(consumptionCurrentPage - 1)}
+                                                disabled={consumptionCurrentPage === 1}
+                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                            >
+                                                <ChevronLeft className="stroke-1.5 h-4 w-4" />
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <span className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                                                Page {consumptionCurrentPage} of {totalConsumptionPages}
+                                            </span>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={() => handleConsumptionPageChange(consumptionCurrentPage + 1)}
+                                                disabled={consumptionCurrentPage === totalConsumptionPages}
+                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                            >
+                                                <ChevronRight className="stroke-1.5 h-4 w-4" />
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={() => handleConsumptionPageChange(totalConsumptionPages)}
+                                                disabled={consumptionCurrentPage === totalConsumptionPages}
+                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                            >
+                                                Last
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
