@@ -82,31 +82,27 @@ const ShowFoodMenu = () => {
         return new Date(dateStr).toLocaleString()
     }
 
-    // Download Attendance History as a professional PDF Report.
-    // The report includes:
-    // - A header with company information
-    // - A report title and total consumed amount (computed from all filtered attendance records)
-    // - A table with columns: Employee Name, Food Menu, Price (RWF), and Date.
+    // --- PDF Report Generation ---
     const downloadAttendancePDF = () => {
         // Flatten the filtered attendance records from all employees.
         const pdfRows = []
         filteredEmployees.forEach(emp => {
             emp.filteredAttendance.forEach(att => {
                 const empName = emp.name
-                const menuName = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].name : "N/A"
-                const menuPrice = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].price : "N/A"
+                const menuName = (att.food_menu && att.food_menu.length > 0) ? att.food_menu[0].name : "N/A"
+                const menuPrice = (att.food_menu && att.food_menu.length > 0) ? att.food_menu[0].price : "0"
                 const date = att.attendance_date
                 pdfRows.push({ empName, menuName, menuPrice, date })
             })
         })
 
-        // Compute total consumed amount from all filtered attendance records.
+        // Compute total consumed amount
         const totalConsumed = pdfRows.reduce((sum, row) => {
             const price = parseFloat(row.menuPrice)
             return !isNaN(price) ? sum + price : sum
         }, 0).toFixed(2)
 
-        // Generate PDF using jsPDF.
+        // Generate PDF using jsPDF
         const { jsPDF } = require("jspdf")
         const doc = new jsPDF('p', 'mm', 'a4')
         const margin = 10
@@ -151,7 +147,7 @@ const ShowFoodMenu = () => {
         doc.setFont('helvetica', 'normal')
 
         // Table Rows
-        pdfRows.forEach(row => {
+        pdfRows.forEach((row, index) => {
             doc.text(row.empName, col1X, y)
             doc.text(row.menuName, col2X, y)
             doc.text(`${row.menuPrice}`, col3X, y)
@@ -163,7 +159,7 @@ const ShowFoodMenu = () => {
             }
         })
 
-        doc.save(`employee_${data.employee.id}_attendance_report.pdf`)
+        doc.save(`food_menu_${data.food_menu.id}_attendance_report.pdf`)
     }
 
     if (loading) {
@@ -304,17 +300,12 @@ const ShowFoodMenu = () => {
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
                                                                 </div>
-                                                                {/*
-                                                                <div className="text-sm">
-                                                                    <strong>Status:</strong> {att.attendance_status}
-                                                                </div>
                                                                 <div className="text-sm">
                                                                     <strong>Food Menu:</strong>{" "}
                                                                     {att.food_menu && att.food_menu.length > 0
                                                                         ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
                                                                         : "N/A"}
                                                                 </div>
-                                                                */}
                                                             </div>
                                                         ))}
                                                     </div>
