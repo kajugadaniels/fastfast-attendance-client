@@ -10,6 +10,18 @@ const ShowFoodMenu = () => {
     const [data, setData] = useState(null)
     const [loading, setLoading] = useState(true)
 
+    // Filter state for the Employees table
+    const currentDate = new Date().toISOString().split('T')[0]
+    const [searchTerm, setSearchTerm] = useState('')
+    const [filterFromDate, setFilterFromDate] = useState(currentDate)
+    const [filterToDate, setFilterToDate] = useState(currentDate)
+    const [filterGender, setFilterGender] = useState('')
+    const [filterPosition, setFilterPosition] = useState('')
+
+    // Pagination state for the Employees table
+    const [currentPage, setCurrentPage] = useState(1)
+    const pageSize = 10
+
     useEffect(() => {
         const getFoodMenuDetails = async () => {
             try {
@@ -31,6 +43,38 @@ const ShowFoodMenu = () => {
         navigate('/food-menus')
     }
 
+    // Prepare filtered employees for the Attendance History table
+    // First, filter employees by search term, gender, and position.
+    // Then, for each employee, filter their attendance history based on the date range.
+    const filteredEmployees = (data?.employees || []).filter(emp => {
+        const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesGender = filterGender ? emp.gender === filterGender : true
+        const matchesPosition = filterPosition
+            ? (emp.position || '').toLowerCase() === filterPosition.toLowerCase()
+            : true
+        return matchesSearch && matchesGender && matchesPosition
+    }).map(emp => {
+        const filteredAttendance = (emp.attendance_history || []).filter(att => {
+            return att.attendance_date >= filterFromDate && att.attendance_date <= filterToDate
+        })
+        return { ...emp, filteredAttendance }
+    }).filter(emp => emp.filteredAttendance.length > 0) // Only show employees with at least one record
+
+    const totalRecords = filteredEmployees.length
+    const totalPages = Math.ceil(totalRecords / pageSize)
+    const paginatedEmployees = filteredEmployees.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page)
+        }
+    }
+
+    // Helper: Format attendance time/date (if needed)
+    const formatDateTime = (dateStr) => {
+        return new Date(dateStr).toLocaleString()
+    }
+
     if (loading) {
         return <div className="text-center py-10">Loading food menu details...</div>
     }
@@ -38,7 +82,6 @@ const ShowFoodMenu = () => {
         return <div className="text-center py-10">No food menu found.</div>
     }
 
-    // Destructure the returned data (assuming backend returns { food_menu: {...}, employees: [...] })
     const { food_menu, employees } = data
 
     return (
@@ -75,13 +118,72 @@ const ShowFoodMenu = () => {
                     </div>
                 </div>
 
-                {/* Employees Assigned */}
+                {/* Employees with Attendance History */}
                 <div className="col-span-12 lg:col-span-8">
                     <div className="box p-5">
                         <div className="mb-5 border-b pb-5">
                             <span className="text-base font-medium">Employees with Attendance History</span>
                         </div>
-                        {employees && employees.length > 0 ? (
+                        {/* Filter Bar */}
+                        <div className="flex flex-wrap gap-4 mb-4">
+                            <input
+                                type="text"
+                                placeholder="Search by name..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="border rounded-md p-2"
+                            />
+                            <input
+                                type="date"
+                                value={filterFromDate}
+                                onChange={(e) => {
+                                    setFilterFromDate(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="border rounded-md p-2"
+                            />
+                            <input
+                                type="date"
+                                value={filterToDate}
+                                onChange={(e) => {
+                                    setFilterToDate(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="border rounded-md p-2"
+                            />
+                            <select
+                                value={filterGender}
+                                onChange={(e) => {
+                                    setFilterGender(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="border rounded-md p-2"
+                            >
+                                <option value="">All Genders</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                                <option value="O">Other</option>
+                            </select>
+                            <select
+                                value={filterPosition}
+                                onChange={(e) => {
+                                    setFilterPosition(e.target.value)
+                                    setCurrentPage(1)
+                                }}
+                                className="border rounded-md p-2"
+                            >
+                                <option value="">All Positions</option>
+                                <option value="Staff">Staff</option>
+                                <option value="Umwubatsi">Umwubatsi</option>
+                                <option value="Umufundi">Umufundi</option>
+                                <option value="Umuyede">Umuyede</option>
+                            </select>
+                        </div>
+                        {/* Employees Table */}
+                        {paginatedEmployees.length > 0 ? (
                             <table className="w-full text-left">
                                 <thead>
                                     <tr>
@@ -93,16 +195,16 @@ const ShowFoodMenu = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees.map(emp => (
+                                    {paginatedEmployees.map(emp => (
                                         <tr key={emp.employee_id} className="border-b dark:border-darkmode-300">
                                             <td className="px-5 py-3">{emp.name}</td>
                                             <td className="px-5 py-3">{emp.phone}</td>
                                             <td className="px-5 py-3">{emp.gender}</td>
                                             <td className="px-5 py-3">{emp.position}</td>
                                             <td className="px-5 py-3">
-                                                {emp.attendance_history && emp.attendance_history.length > 0 ? (
+                                                {emp.filteredAttendance && emp.filteredAttendance.length > 0 ? (
                                                     <div className="space-y-2">
-                                                        {emp.attendance_history.map((att, idx) => (
+                                                        {emp.filteredAttendance.map((att, idx) => (
                                                             <div key={idx} className="border p-2 rounded-md">
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
@@ -131,7 +233,48 @@ const ShowFoodMenu = () => {
                                 </tbody>
                             </table>
                         ) : (
-                            <div className="text-center py-10">No employees found for this food menu.</div>
+                            <div className="text-center py-10">
+                                <h3 className="text-lg font-medium">No Attendance Found</h3>
+                                <p className="mt-2 text-slate-500 dark:text-slate-400">
+                                    Looks like no employees match your criteria.
+                                </p>
+                            </div>
+                        )}
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center mt-4">
+                                <button
+                                    onClick={() => handlePageChange(1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 border rounded-md mx-1 disabled:opacity-50"
+                                >
+                                    First
+                                </button>
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 border rounded-md mx-1 disabled:opacity-50"
+                                >
+                                    Prev
+                                </button>
+                                <span className="px-3 py-1">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1 border rounded-md mx-1 disabled:opacity-50"
+                                >
+                                    Next
+                                </button>
+                                <button
+                                    onClick={() => handlePageChange(totalPages)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1 border rounded-md mx-1 disabled:opacity-50"
+                                >
+                                    Last
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -140,4 +283,4 @@ const ShowFoodMenu = () => {
     )
 }
 
-export default ShowFoodMenu
+export default ShowFoodMenu;
