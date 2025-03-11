@@ -25,7 +25,8 @@ const ShowEmployee = () => {
     const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null)
     const qrCodeRef = useRef() // For QR code download
 
-    // Ref for attendance history section for PDF generation
+    // Ref for attendance history section for PDF generation (used in old PDF method)
+    // Now we generate PDF programmatically so we don't rely on the DOM.
     const attendanceRef = useRef()
 
     const pageSize = 10
@@ -76,12 +77,11 @@ const ShowEmployee = () => {
             })
             if (response && response.message) {
                 toast.success(response.message.detail)
-                // Update the attendance history in state so that new record is shown immediately
+                // Update the attendance history so that new record shows immediately
                 setEmployeeData(prevData => ({
                     ...prevData,
                     attendance_history: [...prevData.attendance_history, response.data],
                 }))
-                // Reset to first page so that the new record appears if it fits the filter criteria
                 setCurrentPage(1)
                 setIsModalOpen(false)
             }
@@ -108,23 +108,76 @@ const ShowEmployee = () => {
         }
     }
 
-    // Download Attendance History as PDF
+    // Download Attendance History as a professionally formatted PDF Report.
+    // The report includes the company header, total consumed amount, and a table with:
+    // Employee Name, Food Menu, Price, and Date.
     const downloadAttendancePDF = () => {
-        if (attendanceRef.current) {
-            toPng(attendanceRef.current)
-                .then(dataUrl => {
-                    const pdf = new jsPDF('p', 'mm', 'a4')
-                    const pdfWidth = pdf.internal.pageSize.getWidth()
-                    const imgProps = pdf.getImageProperties(dataUrl)
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-                    pdf.save(`employee_${employeeData?.employee?.id}_attendance_history.pdf`)
-                })
-                .catch(error => {
-                    console.error('Error generating PDF:', error)
-                    toast.error('Failed to download PDF.')
-                })
-        }
+        const doc = new jsPDF('p', 'mm', 'a4')
+        const margin = 10
+        let y = margin
+
+        // Company Header
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(16)
+        doc.text("Your Company Name", margin, y)
+        y += 7
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.text("Address: 1234 Company Address, City, Country", margin, y)
+        y += 5
+        doc.text("Contact: +1234567890 | Email: info@company.com", margin, y)
+        y += 10
+
+        // Report Title
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'bold')
+        doc.text("Attendance Report", margin, y)
+        y += 8
+
+        // Total Consumption Summary
+        const totalConsumed = filteredSortedAttendance.reduce((sum, att) => {
+            if (att.attendance_status === "Present" && att.food_menu && att.food_menu.length > 0) {
+                return sum + parseFloat(att.food_menu[0].price)
+            }
+            return sum
+        }, 0).toFixed(2)
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'normal')
+        doc.text(`Total Consumption: ${totalConsumed} RWF`, margin, y)
+        y += 10
+
+        // Table Header
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        const col1X = margin
+        const col2X = margin + 50
+        const col3X = margin + 100
+        const col4X = margin + 140
+        doc.text("Employee Name", col1X, y)
+        doc.text("Food Menu", col2X, y)
+        doc.text("Price (RWF)", col3X, y)
+        doc.text("Date", col4X, y)
+        y += 6
+        doc.setFont('helvetica', 'normal')
+
+        // Table Rows (all filtered attendance records)
+        filteredSortedAttendance.forEach((att, index) => {
+            const empName = employeeData.employee.name
+            const menuName = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].name : "N/A"
+            const menuPrice = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].price : "N/A"
+            const date = att.attendance_date
+            doc.text(empName, col1X, y)
+            doc.text(menuName, col2X, y)
+            doc.text(`${menuPrice}`, col3X, y)
+            doc.text(date, col4X, y)
+            y += 6
+            if (y > 280) {
+                doc.addPage()
+                y = margin
+            }
+        })
+
+        doc.save(`employee_${employeeData.employee.id}_attendance_report.pdf`)
     }
 
     // Filter and sort the attendance history (based on date only)
@@ -317,10 +370,10 @@ const ShowEmployee = () => {
                                         <td className="px-5 py-3">
                                             {att.food_menu && att.food_menu.length > 0
                                                 ? att.food_menu.map((menu, idx) => (
-                                                    <div key={idx}>
-                                                        {menu.name} - {menu.price} RWF
-                                                    </div>
-                                                ))
+                                                      <div key={idx}>
+                                                          {menu.name} - {menu.price} RWF
+                                                      </div>
+                                                  ))
                                                 : "N/A"}
                                         </td>
                                     </tr>
