@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchFoodMenu } from '../../api'
 import { Eye, ChevronLeft } from 'lucide-react'
+import { jsPDF } from 'jspdf' // Import jsPDF
 
 const ShowFoodMenu = () => {
     const { id } = useParams()
@@ -82,28 +83,31 @@ const ShowFoodMenu = () => {
         return new Date(dateStr).toLocaleString()
     }
 
-    // --- PDF Report Generation ---
+    // Download Attendance History as a professional PDF Report.
+    // The report includes:
+    // - A header with company information
+    // - A report title and total consumed amount (computed from all filtered attendance records)
+    // - A table with columns: Employee Name, Food Menu, Price (RWF), and Date.
     const downloadAttendancePDF = () => {
         // Flatten the filtered attendance records from all employees.
         const pdfRows = []
         filteredEmployees.forEach(emp => {
             emp.filteredAttendance.forEach(att => {
                 const empName = emp.name
-                const menuName = (att.food_menu && att.food_menu.length > 0) ? att.food_menu[0].name : "N/A"
-                const menuPrice = (att.food_menu && att.food_menu.length > 0) ? att.food_menu[0].price : "0"
+                const menuName = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].name : "N/A"
+                const menuPrice = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].price : "N/A"
                 const date = att.attendance_date
                 pdfRows.push({ empName, menuName, menuPrice, date })
             })
         })
 
-        // Compute total consumed amount
+        // Compute total consumed amount from all filtered attendance records.
         const totalConsumed = pdfRows.reduce((sum, row) => {
             const price = parseFloat(row.menuPrice)
             return !isNaN(price) ? sum + price : sum
         }, 0).toFixed(2)
 
-        // Generate PDF using jsPDF
-        const { jsPDF } = require("jspdf")
+        // Generate PDF using jsPDF.
         const doc = new jsPDF('p', 'mm', 'a4')
         const margin = 10
         let y = margin
@@ -147,7 +151,7 @@ const ShowFoodMenu = () => {
         doc.setFont('helvetica', 'normal')
 
         // Table Rows
-        pdfRows.forEach((row, index) => {
+        pdfRows.forEach(row => {
             doc.text(row.empName, col1X, y)
             doc.text(row.menuName, col2X, y)
             doc.text(`${row.menuPrice}`, col3X, y)
@@ -159,6 +163,7 @@ const ShowFoodMenu = () => {
             }
         })
 
+        // Save the PDF report with a file name referencing the food menu ID
         doc.save(`food_menu_${data.food_menu.id}_attendance_report.pdf`)
     }
 
@@ -299,12 +304,6 @@ const ShowFoodMenu = () => {
                                                             <div key={idx} className="border p-2 rounded-md">
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
-                                                                </div>
-                                                                <div className="text-sm">
-                                                                    <strong>Food Menu:</strong>{" "}
-                                                                    {att.food_menu && att.food_menu.length > 0
-                                                                        ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
-                                                                        : "N/A"}
                                                                 </div>
                                                             </div>
                                                         ))}
