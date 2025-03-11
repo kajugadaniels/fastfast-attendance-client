@@ -18,13 +18,16 @@ const GetAttendances = () => {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
+    // Current date as default for date filters
+    const currentDate = new Date().toISOString().split('T')[0]
     // Filters & search
     const [searchTerm, setSearchTerm] = useState('')
     const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent" filter for today's record
     const [genderFilter, setGenderFilter] = useState('')
     const [positionFilter, setPositionFilter] = useState('')
-    const [startDate, setStartDate] = useState('')
-    const [endDate, setEndDate] = useState('')
+    // Set default from and to dates to the current date
+    const [startDate, setStartDate] = useState(currentDate)
+    const [endDate, setEndDate] = useState(currentDate)
     const [foodMenuFilter, setFoodMenuFilter] = useState('')
 
     // Retrieve food menus for filtering options
@@ -42,10 +45,10 @@ const GetAttendances = () => {
         return d
     })
 
-    // Added state to prevent error; if not needed, you can remove the "Record Today's Attendance" button.
+    // Modal state (if needed for other actions)
     const [isModalOpen, setIsModalOpen] = useState(false)
 
-    // Ref for the attendance table container (for PDF download)
+    // Ref for the attendance table container (for PDF download if needed)
     const attendanceRef = useRef()
 
     // Fetch attendance records (complete history)
@@ -123,7 +126,7 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
-        // Filter by date range
+        // Filter by date range: Check if any attendance_history record exists within the range.
         let matchesDateRange = true
         if (startDate) {
             const start = new Date(startDate)
@@ -213,83 +216,112 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  PDF Download Functionality
+    //  Professional PDF Download Functionality
     // --------------------------------------
     const downloadAttendancePDF = () => {
-        // If no filters are applied, download only today's attendance
-        if (
-            searchTerm === '' &&
-            attendanceFilter === '' &&
-            genderFilter === '' &&
-            positionFilter === '' &&
-            startDate === '' &&
-            endDate === '' &&
-            foodMenuFilter === ''
-        ) {
-            const today = new Date().toISOString().split('T')[0]
-            const filteredToday = attendanceData.filter(emp => {
-                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === today)
-                return todayRecord && todayRecord.attendance_status === "Present"
+        // Flatten the attendance records from the filtered data,
+        // including only records that fall within the selected date range
+        const reportRows = []
+        filteredData.forEach(emp => {
+            // Filter attendance records for this employee based on the date range
+            const recordsInRange = (emp.attendance_history || []).filter(record => {
+                if (startDate && endDate) {
+                    const recordDate = new Date(record.attendance_date)
+                    const start = new Date(startDate)
+                    const end = new Date(endDate)
+                    end.setHours(23, 59, 59, 999)
+                    return recordDate >= start && recordDate <= end
+                }
+                return true
             })
-            // Build an HTML table string for today's attendance
-            let tableHTML = '<table style="width:100%; border-collapse: collapse;" border="1"><thead><tr><th>Name</th><th>Phone</th><th>Gender</th><th>Position</th><th>Attendance Date</th><th>Time</th><th>Food Menu</th></tr></thead><tbody>'
-            filteredToday.forEach(emp => {
-                const todayRecord = (emp.attendance_history || []).find(hist => hist.attendance_date === today)
-                if (todayRecord) {
-                    const foodMenuStr = todayRecord.food_menu && todayRecord.food_menu.length > 0 ? todayRecord.food_menu.map(m => `${m.name} - ${m.price} RWF`).join(', ') : 'N/A'
-                    tableHTML += `<tr>
-                        <td>${emp.name}</td>
-                        <td>${emp.phone}</td>
-                        <td>${emp.gender || ''}</td>
-                        <td>${emp.position || ''}</td>
-                        <td>${todayRecord.attendance_date}</td>
-                        <td>${todayRecord.time || ''}</td>
-                        <td>${foodMenuStr}</td>
-                    </tr>`
+            // For a professional report, include only "Present" records
+            recordsInRange.forEach(record => {
+                if (record.attendance_status === "Present") {
+                    reportRows.push({
+                        employeeName: emp.name,
+                        foodMenu:
+                            record.food_menu && record.food_menu.length > 0
+                                ? record.food_menu[0].name
+                                : "N/A",
+                        price:
+                            record.food_menu && record.food_menu.length > 0
+                                ? record.food_menu[0].price
+                                : "0.00",
+                        date: record.attendance_date,
+                        time: record.time
+                    })
                 }
             })
-            tableHTML += '</tbody></table>'
+        })
 
-            // Create a temporary container for the table
-            const tempDiv = document.createElement('div')
-            tempDiv.style.position = 'absolute'
-            tempDiv.style.left = '-9999px'
-            tempDiv.innerHTML = tableHTML
-            document.body.appendChild(tempDiv)
-            toPng(tempDiv)
-                .then(dataUrl => {
-                    const pdf = new jsPDF('p', 'mm', 'a4')
-                    const pdfWidth = pdf.internal.pageSize.getWidth()
-                    const imgProps = pdf.getImageProperties(dataUrl)
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-                    pdf.save(`today_attendance.pdf`)
-                })
-                .catch(error => {
-                    console.error('Error generating PDF:', error)
-                    toast.error('Failed to download PDF.')
-                })
-                .finally(() => {
-                    document.body.removeChild(tempDiv)
-                })
-        } else {
-            // Otherwise, download the currently displayed attendance table
-            if (attendanceRef.current) {
-                toPng(attendanceRef.current)
-                    .then(dataUrl => {
-                        const pdf = new jsPDF('p', 'mm', 'a4')
-                        const pdfWidth = pdf.internal.pageSize.getWidth()
-                        const imgProps = pdf.getImageProperties(dataUrl)
-                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-                        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
-                        pdf.save('attendance.pdf')
-                    })
-                    .catch(error => {
-                        console.error('Error generating PDF:', error)
-                        toast.error('Failed to download PDF.')
-                    })
+        // Compute summary information:
+        const uniqueEmployees = new Set(reportRows.map(row => row.employeeName))
+        const totalEmployeesAttended = uniqueEmployees.size
+        const totalAmountConsumed = reportRows
+            .reduce((sum, row) => sum + parseFloat(row.price), 0)
+            .toFixed(2)
+
+        // Initialize PDF document
+        const doc = new jsPDF('p', 'mm', 'a4')
+        const margin = 10
+        let y = margin
+
+        // Company Header
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(16)
+        doc.text("Your Company Name", margin, y)
+        y += 7
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.text("Address: 1234 Company Address, City, Country", margin, y)
+        y += 5
+        doc.text("Contact: +1234567890 | Email: info@company.com", margin, y)
+        y += 10
+
+        // Report Title
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'bold')
+        doc.text("Attendance Report", margin, y)
+        y += 8
+
+        // Report Summary & Filter Information
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'normal')
+        doc.text(`Report Date Range: ${startDate} to ${endDate}`, margin, y)
+        y += 6
+        doc.text(`Total Employees Attended: ${totalEmployeesAttended}`, margin, y)
+        y += 6
+        doc.text(`Total Amount Consumed: ${totalAmountConsumed} RWF`, margin, y)
+        y += 10
+
+        // Table Header
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        const col1X = margin
+        const col2X = margin + 50
+        const col3X = margin + 100
+        const col4X = margin + 150
+        doc.text("Employee Name", col1X, y)
+        doc.text("Food Menu", col2X, y)
+        doc.text("Price (RWF)", col3X, y)
+        doc.text("Time", col4X, y)
+        y += 6
+        doc.setFont('helvetica', 'normal')
+
+        // Table Rows
+        reportRows.forEach((row, index) => {
+            doc.text(row.employeeName, col1X, y)
+            doc.text(row.foodMenu, col2X, y)
+            doc.text(`${row.price}`, col3X, y)
+            doc.text(row.time, col4X, y)
+            y += 6
+            if (y > 280) {
+                doc.addPage()
+                y = margin
             }
-        }
+        })
+
+        doc.save('attendance_report.pdf')
     }
 
     if (loading) {
@@ -320,7 +352,7 @@ const GetAttendances = () => {
                 {/* Today Attendance Button */}
                 <button
                     onClick={handleTodayAttendance}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70 rounded-full mb-2 mr-1"
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 rounded-full mb-2 mr-1"
                 >
                     Today Attendance
                 </button>
@@ -328,7 +360,7 @@ const GetAttendances = () => {
                 {/* Button to download Attendance PDF */}
                 <button
                     onClick={downloadAttendancePDF}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 [&:hover:not(:disabled)]:bg-opacity-90 [&:hover:not(:disabled)]:border-opacity-90 [&:not(button)]:text-center disabled:opacity-70 disabled:cursor-not-allowed bg-pending border-pending text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 [&:hover:not(:disabled)]:dark:dark:bg-darkmode-800/70 rounded-full mb-2 mr-1"
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-pending border-pending text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 rounded-full mb-2 mr-1"
                 >
                     Download Attendance PDF
                 </button>
@@ -347,7 +379,7 @@ const GetAttendances = () => {
                                 setSearchTerm(e.target.value)
                                 setCurrentPage(1)
                             }}
-                            className="disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400/90 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50 !box w-56 pr-10"
+                            className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md placeholder:text-slate-400 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 w-56 pr-10"
                         />
                         <Search className="stroke-1.5 absolute inset-y-0 right-0 my-auto mr-3 h-4 w-4" />
                     </div>
@@ -359,7 +391,7 @@ const GetAttendances = () => {
                             setAttendanceFilter(e.target.value)
                             setCurrentPage(1)
                         }}
-                        className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
+                        className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 w-44"
                     >
                         <option value="">All</option>
                         <option value="Present">Present</option>
@@ -373,7 +405,7 @@ const GetAttendances = () => {
                             setGenderFilter(e.target.value)
                             setCurrentPage(1)
                         }}
-                        className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
+                        className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 w-44"
                     >
                         <option value="">All Genders</option>
                         <option value="M">Male</option>
@@ -388,7 +420,7 @@ const GetAttendances = () => {
                             setPositionFilter(e.target.value)
                             setCurrentPage(1)
                         }}
-                        className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
+                        className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 w-44"
                     >
                         <option value="">All Positions</option>
                         <option value="Staff">Staff</option>
@@ -407,7 +439,7 @@ const GetAttendances = () => {
                                 setStartDate(e.target.value)
                                 setCurrentPage(1)
                             }}
-                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                            className="w-40 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
                         />
                         <span className="text-sm text-slate-700">To:</span>
                         <input
@@ -417,7 +449,7 @@ const GetAttendances = () => {
                                 setEndDate(e.target.value)
                                 setCurrentPage(1)
                             }}
-                            className="w-40 disabled:bg-slate-100 disabled:cursor-not-allowed dark:disabled:bg-800/50 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
+                            className="w-40 transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700"
                         />
                     </div>
 
@@ -442,109 +474,96 @@ const GetAttendances = () => {
                 </div>
 
                 <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible" ref={attendanceRef}>
-                    {loading ? (
-                        <div className="text-center py-10">Loading attendance...</div>
-                    ) : error ? (
-                        <div className="text-center py-10 text-red-500">{error}</div>
-                    ) : filteredData.length === 0 ? (
-                        <div className="text-center py-10">
-                            <h3 className="text-lg font-medium">No Attendance Found</h3>
-                            <p className="mt-2 text-slate-500 dark:text-slate-400">
-                                Looks like no employees match your criteria.
-                            </p>
-                        </div>
-                    ) : (
-                        <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
-                            <thead>
-                                <tr>
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                    <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
+                        <thead>
+                            <tr>
+                                <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                    <input
+                                        type="checkbox"
+                                        className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
+                                    />
+                                </th>
+                                <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                    Name
+                                </th>
+                                {daysArray.map((d, idx) => (
+                                    <th
+                                        key={idx}
+                                        className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center"
+                                    >
+                                        {formatDate(d)}
+                                    </th>
+                                ))}
+                                <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
+                                    Action
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {paginatedData.map(emp => (
+                                <tr key={emp.employee_id} className="intro-x">
+                                    <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
                                         <input
                                             type="checkbox"
                                             className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
                                         />
-                                    </th>
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
-                                        Name
-                                    </th>
-                                    {daysArray.map((d, idx) => (
-                                        <th
-                                            key={idx}
-                                            className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center"
-                                        >
-                                            {formatDate(d)}
-                                        </th>
-                                    ))}
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
-                                        Action
-                                    </th>
+                                    </td>
+                                    <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                        <div className="flex items-center">
+                                            <div className="image-fit zoom-in h-9 w-9">
+                                                <img
+                                                    src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
+                                                    className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
+                                                    alt="employee avatar"
+                                                />
+                                            </div>
+                                            <div className="ml-4">
+                                                <span className="whitespace-nowrap font-medium">
+                                                    {emp.name}
+                                                </span>
+                                                <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
+                                                    ID: {emp.employee_id}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {daysArray.map((d, dayIdx) => {
+                                        const { status, time } = getDayStatus(emp, dayIdx)
+                                        let bgColor = 'bg-slate-400'
+                                        if (status === 'Present') bgColor = 'bg-success'
+                                        else if (status === 'Absent') bgColor = 'bg-danger'
+                                        else if (status === 'Future') bgColor = 'bg-warning'
+                                        return (
+                                            <td
+                                                key={dayIdx}
+                                                className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600"
+                                            >
+                                                <span
+                                                    className={`px-3 py-1 inline-block rounded-full text-xs text-white ${bgColor}`}
+                                                >
+                                                    {status}
+                                                </span>
+                                                {dayOffsets[dayIdx] === 0 && time && (
+                                                    <div className="text-xs mt-1">{time}</div>
+                                                )}
+                                            </td>
+                                        )
+                                    })}
+                                    <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                        <div className="flex items-center justify-center">
+                                            <button
+                                                className="mr-3 flex items-center text-blue-600"
+                                                onClick={() => handleShowEmployee(emp.employee_id)}
+                                            >
+                                                <Eye className="stroke-1.5 mr-1 h-4 w-4" />
+                                                View
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedData.map(emp => (
-                                    <tr key={emp.employee_id} className="intro-x">
-                                        <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <input
-                                                type="checkbox"
-                                                className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded"
-                                            />
-                                        </td>
-                                        <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <div className="flex items-center">
-                                                <div className="image-fit zoom-in h-9 w-9">
-                                                    <img
-                                                        src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
-                                                        className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
-                                                        alt="employee avatar"
-                                                    />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <span className="whitespace-nowrap font-medium">
-                                                        {emp.name}
-                                                    </span>
-                                                    <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
-                                                        ID: {emp.employee_id}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        {daysArray.map((d, dayIdx) => {
-                                            const { status, time } = getDayStatus(emp, dayIdx)
-                                            let bgColor = 'bg-slate-400'
-                                            if (status === 'Present') bgColor = 'bg-success'
-                                            else if (status === 'Absent') bgColor = 'bg-danger'
-                                            else if (status === 'Future') bgColor = 'bg-warning'
-                                            return (
-                                                <td
-                                                    key={dayIdx}
-                                                    className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600"
-                                                >
-                                                    <span
-                                                        className={`px-3 py-1 inline-block rounded-full text-xs text-white ${bgColor}`}
-                                                    >
-                                                        {status}
-                                                    </span>
-                                                    {dayOffsets[dayIdx] === 0 && time && (
-                                                        <div className="text-xs mt-1">{time}</div>
-                                                    )}
-                                                </td>
-                                            )
-                                        })}
-                                        <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <div className="flex items-center justify-center">
-                                                <button
-                                                    className="mr-3 flex items-center text-blue-600"
-                                                    onClick={() => handleShowEmployee(emp.employee_id)}
-                                                >
-                                                    <Eye className="stroke-1.5 mr-1 h-4 w-4" />
-                                                    View
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
 
                 {/* Pagination area */}
