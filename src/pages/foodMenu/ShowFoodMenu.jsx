@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchFoodMenu } from '../../api'
 import { Eye, ChevronLeft } from 'lucide-react'
-import { jsPDF } from 'jspdf' // Import jsPDF
+import { jsPDF } from 'jspdf'
 
 const ShowFoodMenu = () => {
     const { id } = useParams()
@@ -75,39 +75,35 @@ const ShowFoodMenu = () => {
         }
     }
 
-    // Calculate the alternate total amount: count of filtered employees * food_menu.price
-    const alternateTotal = (filteredEmployees.length * parseFloat(data?.food_menu.price || 0)).toFixed(2)
+    // Calculate alternate total amount: number of attendance records * food_menu.price.
+    // Since the food menu is the same for all, we can multiply the total count of all filtered attendance records.
+    const totalAttendanceCount = filteredEmployees.reduce((sum, emp) => {
+        return sum + emp.filteredAttendance.length
+    }, 0)
+    const alternateTotal = (totalAttendanceCount * parseFloat(data?.food_menu.price || 0)).toFixed(2)
 
-    // Helper: Format date/time
-    const formatDateTime = (dateStr) => {
-        return new Date(dateStr).toLocaleString()
-    }
+    // Helper: Format date/time strings
+    const formatDateTime = dateStr => new Date(dateStr).toLocaleString()
 
     // Download Attendance History as a professional PDF Report.
-    // The report includes:
-    // - A header with company information
-    // - A report title and total consumed amount (computed from all filtered attendance records)
-    // - A table with columns: Employee Name, Food Menu, Price (RWF), and Date.
+    // The report header includes company information, filter summary, and total consumed amount.
+    // The table lists each record with Employee Name and Attendance Date.
     const downloadAttendancePDF = () => {
-        // Flatten the filtered attendance records from all employees.
+        // Flatten filtered attendance records: each row with employee name and attendance date.
         const pdfRows = []
         filteredEmployees.forEach(emp => {
             emp.filteredAttendance.forEach(att => {
-                const empName = emp.name
-                const menuName = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].name : "N/A"
-                const menuPrice = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].price : "N/A"
-                const date = att.attendance_date
-                pdfRows.push({ empName, menuName, menuPrice, date })
+                pdfRows.push({
+                    empName: emp.name,
+                    date: att.attendance_date
+                })
             })
         })
 
-        // Compute total consumed amount from all filtered attendance records.
-        const totalConsumed = pdfRows.reduce((sum, row) => {
-            const price = parseFloat(row.menuPrice)
-            return !isNaN(price) ? sum + price : sum
-        }, 0).toFixed(2)
+        // Compute total consumed amount (same as alternateTotal).
+        const foodMenu = (pdfRows.length * parseFloat(data.food_menu.name)).toFixed(2)
+        const totalConsumed = (pdfRows.length * parseFloat(data.food_menu.price)).toFixed(2)
 
-        // Generate PDF using jsPDF.
         const doc = new jsPDF('p', 'mm', 'a4')
         const margin = 10
         let y = margin
@@ -124,38 +120,42 @@ const ShowFoodMenu = () => {
         doc.text("Contact: +1234567890 | Email: info@company.com", margin, y)
         y += 10
 
-        // Report Title
+        // Report Title & Filter Summary
         doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')
-        doc.text("Attendance Report", margin, y)
+        doc.text("Food Menu Attendance Report", margin, y)
         y += 8
-
-        // Total Consumption Summary
         doc.setFontSize(12)
         doc.setFont('helvetica', 'normal')
-        doc.text(`Total Consumption: ${totalConsumed} RWF`, margin, y)
+        doc.text(`Report Date Range: ${filterFromDate} to ${filterToDate}`, margin, y)
+        y += 6
+        if (filterGender) {
+            doc.text(`Gender Filter: ${filterGender}`, margin, y)
+            y += 6
+        }
+        if (filterPosition) {
+            doc.text(`Position Filter: ${filterPosition}`, margin, y)
+            y += 6
+        }
+        doc.text(`Total Consumed Amount: ${foodMenu}`, margin, y)
+        y += 10
+        doc.text(`Total Consumed Amount: ${totalConsumed} RWF`, margin, y)
         y += 10
 
         // Table Header
         doc.setFontSize(11)
         doc.setFont('helvetica', 'bold')
         const col1X = margin
-        const col2X = margin + 50
-        const col3X = margin + 100
-        const col4X = margin + 140
+        const col2X = margin + 80
         doc.text("Employee Name", col1X, y)
-        doc.text("Food Menu", col2X, y)
-        doc.text("Price (RWF)", col3X, y)
-        doc.text("Date", col4X, y)
+        doc.text("Attendance Date", col2X, y)
         y += 6
         doc.setFont('helvetica', 'normal')
 
         // Table Rows
         pdfRows.forEach(row => {
             doc.text(row.empName, col1X, y)
-            doc.text(row.menuName, col2X, y)
-            doc.text(`${row.menuPrice}`, col3X, y)
-            doc.text(row.date, col4X, y)
+            doc.text(row.date, col2X, y)
             y += 6
             if (y > 280) {
                 doc.addPage()
@@ -163,7 +163,6 @@ const ShowFoodMenu = () => {
             }
         })
 
-        // Save the PDF report with a file name referencing the food menu ID
         doc.save(`food_menu_${data.food_menu.id}_attendance_report.pdf`)
     }
 
@@ -223,7 +222,7 @@ const ShowFoodMenu = () => {
                                 <input
                                     type="date"
                                     value={filterFromDate}
-                                    onChange={(e) => {
+                                    onChange={e => {
                                         setFilterFromDate(e.target.value)
                                         setCurrentPage(1)
                                     }}
@@ -233,7 +232,7 @@ const ShowFoodMenu = () => {
                                 <input
                                     type="date"
                                     value={filterToDate}
-                                    onChange={(e) => {
+                                    onChange={e => {
                                         setFilterToDate(e.target.value)
                                         setCurrentPage(1)
                                     }}
@@ -243,7 +242,7 @@ const ShowFoodMenu = () => {
                                     type="text"
                                     placeholder="Search by name..."
                                     value={searchTerm}
-                                    onChange={(e) => {
+                                    onChange={e => {
                                         setSearchTerm(e.target.value)
                                         setCurrentPage(1)
                                     }}
@@ -251,7 +250,7 @@ const ShowFoodMenu = () => {
                                 />
                                 <select
                                     value={filterPosition}
-                                    onChange={(e) => {
+                                    onChange={e => {
                                         setFilterPosition(e.target.value)
                                         setCurrentPage(1)
                                     }}
@@ -265,7 +264,7 @@ const ShowFoodMenu = () => {
                                 </select>
                                 <select
                                     value={filterGender}
-                                    onChange={(e) => {
+                                    onChange={e => {
                                         setFilterGender(e.target.value)
                                         setCurrentPage(1)
                                     }}
