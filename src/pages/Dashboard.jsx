@@ -234,7 +234,18 @@ const Dashboard = () => {
     // --------------------------------------------
     // Today's Food Menu Consumption Table Data
     // --------------------------------------------
-    const todayFoodMenuConsumption = Object.entries(foodMenuSummary);
+    // Instead of using only those menus consumed, we loop through all food menus.
+    // For each menu, if it's present in foodMenuSummary, show its count and total amount,
+    // otherwise display 0.
+    const todayFoodMenuConsumption = foodMenus.map(menu => {
+        const summary = foodMenuSummary[menu.name] || { count: 0, price: menu.price };
+        const totalAmount = summary.count * parseFloat(menu.price);
+        return {
+            name: menu.name,
+            count: summary.count,
+            totalAmount: totalAmount.toFixed(2),
+        };
+    });
 
     if (loading) {
         return <div className="text-center py-10">Loading dashboard...</div>;
@@ -364,11 +375,12 @@ const Dashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {Object.entries(foodMenuSummary).map(([menuName, summary]) => {
-                                        const totalAmount = summary.count * parseFloat(summary.price);
+                                    {foodMenus.map(menu => {
+                                        const summary = foodMenuSummary[menu.name] || { count: 0, price: menu.price };
+                                        const totalAmount = summary.count * parseFloat(menu.price);
                                         return (
-                                            <tr key={menuName} className="border-t">
-                                                <td className="px-4 py-2">{menuName}</td>
+                                            <tr key={menu.id} className="border-t">
+                                                <td className="px-4 py-2">{menu.name}</td>
                                                 <td className="px-4 py-2">{summary.count}</td>
                                                 <td className="px-4 py-2">{totalAmount.toFixed(2)}</td>
                                             </tr>
