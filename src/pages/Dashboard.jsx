@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { fetchEmployees, fetchAttendances, fetchFoodMenus } from '../api';
 import { Line, Bar } from 'react-chartjs-2';
 import { Link } from 'react-router-dom';
-import { CookingPot, HandCoins, RefreshCw, UserCheck, UserSquare, ChevronLeft } from 'lucide-react';
+import { CookingPot, HandCoins, RefreshCw, UserCheck, UserSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
     Chart as ChartJS,
     CategoryScale,
