@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchFoodMenu } from '../../api'
@@ -74,13 +74,96 @@ const ShowFoodMenu = () => {
         }
     }
 
-    // Calculate the alternate total amount as:
-    // Number of filtered employees multiplied by the food_menu.price.
+    // Calculate the alternate total amount: count of filtered employees * food_menu.price
     const alternateTotal = (filteredEmployees.length * parseFloat(data?.food_menu.price || 0)).toFixed(2)
 
-    // Helper: Format date/time strings (if needed)
+    // Helper: Format date/time
     const formatDateTime = (dateStr) => {
         return new Date(dateStr).toLocaleString()
+    }
+
+    // Download Attendance History as a professional PDF Report.
+    // The report includes:
+    // - A header with company information
+    // - A report title and total consumed amount (computed from all filtered attendance records)
+    // - A table with columns: Employee Name, Food Menu, Price (RWF), and Date.
+    const downloadAttendancePDF = () => {
+        // Flatten the filtered attendance records from all employees.
+        const pdfRows = []
+        filteredEmployees.forEach(emp => {
+            emp.filteredAttendance.forEach(att => {
+                const empName = emp.name
+                const menuName = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].name : "N/A"
+                const menuPrice = att.food_menu && att.food_menu.length > 0 ? att.food_menu[0].price : "N/A"
+                const date = att.attendance_date
+                pdfRows.push({ empName, menuName, menuPrice, date })
+            })
+        })
+
+        // Compute total consumed amount from all filtered attendance records.
+        const totalConsumed = pdfRows.reduce((sum, row) => {
+            const price = parseFloat(row.menuPrice)
+            return !isNaN(price) ? sum + price : sum
+        }, 0).toFixed(2)
+
+        // Generate PDF using jsPDF.
+        const { jsPDF } = require("jspdf")
+        const doc = new jsPDF('p', 'mm', 'a4')
+        const margin = 10
+        let y = margin
+
+        // Company Header
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(16)
+        doc.text("Your Company Name", margin, y)
+        y += 7
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.text("Address: 1234 Company Address, City, Country", margin, y)
+        y += 5
+        doc.text("Contact: +1234567890 | Email: info@company.com", margin, y)
+        y += 10
+
+        // Report Title
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'bold')
+        doc.text("Attendance Report", margin, y)
+        y += 8
+
+        // Total Consumption Summary
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'normal')
+        doc.text(`Total Consumption: ${totalConsumed} RWF`, margin, y)
+        y += 10
+
+        // Table Header
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        const col1X = margin
+        const col2X = margin + 50
+        const col3X = margin + 100
+        const col4X = margin + 140
+        doc.text("Employee Name", col1X, y)
+        doc.text("Food Menu", col2X, y)
+        doc.text("Price (RWF)", col3X, y)
+        doc.text("Date", col4X, y)
+        y += 6
+        doc.setFont('helvetica', 'normal')
+
+        // Table Rows
+        pdfRows.forEach(row => {
+            doc.text(row.empName, col1X, y)
+            doc.text(row.menuName, col2X, y)
+            doc.text(`${row.menuPrice}`, col3X, y)
+            doc.text(row.date, col4X, y)
+            y += 6
+            if (y > 280) {
+                doc.addPage()
+                y = margin
+            }
+        })
+
+        doc.save(`employee_${data.employee.id}_attendance_report.pdf`)
     }
 
     if (loading) {
@@ -221,6 +304,7 @@ const ShowFoodMenu = () => {
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
                                                                 </div>
+                                                                {/*
                                                                 <div className="text-sm">
                                                                     <strong>Status:</strong> {att.attendance_status}
                                                                 </div>
@@ -230,6 +314,7 @@ const ShowFoodMenu = () => {
                                                                         ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
                                                                         : "N/A"}
                                                                 </div>
+                                                                */}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -292,70 +377,12 @@ const ShowFoodMenu = () => {
             {/* Actions */}
             <div className="flex justify-end gap-4 mt-6">
                 <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 bg-primary border-primary text-white"
-                >
-                    Record Today's Attendance
-                </button>
-                <button
                     onClick={downloadAttendancePDF}
                     className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-success focus:ring-opacity-20 bg-success border-success text-white"
                 >
                     Download Attendance PDF
                 </button>
             </div>
-
-            {/* Attendance Record Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-1/3 p-8 transform transition-all duration-300">
-                        <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
-                            Select Food Menu
-                        </h3>
-                        <ul className="space-y-4 max-h-60 overflow-y-auto">
-                            {foodMenus.map(menu => (
-                                <li
-                                    key={menu.id}
-                                    className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
-                                >
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="foodMenu"
-                                            value={menu.id}
-                                            checked={selectedFoodMenuId === menu.id}
-                                            onChange={() => setSelectedFoodMenuId(menu.id)}
-                                            className="mr-2"
-                                        />
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="text-gray-800 dark:text-gray-100 font-medium">
-                                                {menu.name}
-                                            </span>
-                                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                                                {menu.price} RWF
-                                            </span>
-                                        </div>
-                                    </label>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="mt-8 flex justify-end space-x-4">
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAttendanceSubmit}
-                                className="px-5 py-2 bg-primary text-white rounded-md shadow hover:bg-primary-dark transition duration-200"
-                            >
-                                Submit Attendance
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
