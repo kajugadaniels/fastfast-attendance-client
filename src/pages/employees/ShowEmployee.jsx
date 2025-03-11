@@ -22,7 +22,6 @@ const ShowEmployee = () => {
     const [sortOption, setSortOption] = useState('dateDesc')
     const [message, setMessage] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false) // Controls modal visibility
-    const [selectedFoodMenu, setSelectedFoodMenu] = useState(null) // Selected food menu for attendance
     const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null)
     const qrCodeRef = useRef() // For QR code download
 
@@ -77,11 +76,12 @@ const ShowEmployee = () => {
             })
             if (response && response.message) {
                 toast.success(response.message.detail)
-                // Append the new attendance record to the employee's attendance history and reset current page to 1
+                // Update the attendance history in state so that new record is shown immediately
                 setEmployeeData(prevData => ({
                     ...prevData,
                     attendance_history: [...prevData.attendance_history, response.data],
                 }))
+                // Reset to first page so that the new record appears if it fits the filter criteria
                 setCurrentPage(1)
                 setIsModalOpen(false)
             }
