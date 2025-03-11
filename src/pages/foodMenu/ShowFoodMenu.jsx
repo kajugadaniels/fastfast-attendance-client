@@ -102,7 +102,7 @@ const ShowFoodMenu = () => {
                 >
                     Go Back
                     <span className="flex h-5 w-5 items-center justify-center ml-1">
-                        <ChevronLeft className="stroke-1.5 h-4 w-4" />
+                        <Eye className="stroke-1.5 h-4 w-4" />
                     </span>
                 </button>
             </div>
