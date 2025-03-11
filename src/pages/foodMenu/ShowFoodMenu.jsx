@@ -43,22 +43,26 @@ const ShowFoodMenu = () => {
         navigate('/food-menus')
     }
 
-    // Prepare filtered employees for the Attendance History table
-    // First, filter employees by search term, gender, and position.
-    // Then, for each employee, filter their attendance history based on the date range.
-    const filteredEmployees = (data?.employees || []).filter(emp => {
-        const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesGender = filterGender ? emp.gender === filterGender : true
-        const matchesPosition = filterPosition
-            ? (emp.position || '').toLowerCase() === filterPosition.toLowerCase()
-            : true
-        return matchesSearch && matchesGender && matchesPosition
-    }).map(emp => {
-        const filteredAttendance = (emp.attendance_history || []).filter(att => {
-            return att.attendance_date >= filterFromDate && att.attendance_date <= filterToDate
+    // Prepare filtered employees for the Attendance History table:
+    // 1. Filter employees by search term, gender, and position.
+    // 2. For each employee, filter their attendance history based on the date range.
+    // 3. Only include employees with at least one attendance record.
+    const filteredEmployees = (data?.employees || [])
+        .filter(emp => {
+            const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+            const matchesGender = filterGender ? emp.gender === filterGender : true
+            const matchesPosition = filterPosition
+                ? (emp.position || '').toLowerCase() === filterPosition.toLowerCase()
+                : true
+            return matchesSearch && matchesGender && matchesPosition
         })
-        return { ...emp, filteredAttendance }
-    }).filter(emp => emp.filteredAttendance.length > 0) // Only show employees with at least one record
+        .map(emp => {
+            const filteredAttendance = (emp.attendance_history || []).filter(att => {
+                return att.attendance_date >= filterFromDate && att.attendance_date <= filterToDate
+            })
+            return { ...emp, filteredAttendance }
+        })
+        .filter(emp => emp.filteredAttendance.length > 0)
 
     const totalRecords = filteredEmployees.length
     const totalPages = Math.ceil(totalRecords / pageSize)
@@ -70,7 +74,19 @@ const ShowFoodMenu = () => {
         }
     }
 
-    // Helper: Format attendance time/date (if needed)
+    // Compute the total consumed amount from the filtered attendance histories.
+    // For each employee, each attendance record's food menu price is added.
+    const totalConsumedAmount = filteredEmployees.reduce((sum, emp) => {
+        const empTotal = emp.filteredAttendance.reduce((empSum, att) => {
+            if (att.food_menu && att.food_menu.length > 0) {
+                return empSum + parseFloat(att.food_menu[0].price)
+            }
+            return empSum
+        }, 0)
+        return sum + empTotal
+    }, 0).toFixed(2)
+
+    // Helper: Format date/time (if needed)
     const formatDateTime = (dateStr) => {
         return new Date(dateStr).toLocaleString()
     }
@@ -82,7 +98,7 @@ const ShowFoodMenu = () => {
         return <div className="text-center py-10">No food menu found.</div>
     }
 
-    const { food_menu, employees } = data
+    const { food_menu } = data
 
     return (
         <div className="container mx-auto p-6">
@@ -121,9 +137,9 @@ const ShowFoodMenu = () => {
                 {/* Employees with Attendance History */}
                 <div className="col-span-12 lg:col-span-7 2xl:col-span-8">
                     <div className="box rounded-md p-5">
+                        {/* Filters */}
                         <div className="mb-5 flex flex-col sm:flex-row items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
                             <div className="ml-auto flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
-                                {/* Date Range Filters */}
                                 <input
                                     type="date"
                                     value={filterFromDate}
@@ -143,7 +159,6 @@ const ShowFoodMenu = () => {
                                     }}
                                     className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
                                 />
-                                {/* Search Filter */}
                                 <input
                                     type="text"
                                     placeholder="Search by name..."
@@ -154,21 +169,6 @@ const ShowFoodMenu = () => {
                                     }}
                                     className="w-56 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
                                 />
-                                {/*
-                                <select
-                                    value={filterGender}
-                                    onChange={(e) => {
-                                        setFilterGender(e.target.value)
-                                        setCurrentPage(1)
-                                    }}
-                                    className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
-                                >
-                                    <option value="">All Genders</option>
-                                    <option value="M">Male</option>
-                                    <option value="F">Female</option>
-                                    <option value="O">Other</option>
-                                </select>
-                                */}
                                 <select
                                     value={filterPosition}
                                     onChange={(e) => {
@@ -184,6 +184,11 @@ const ShowFoodMenu = () => {
                                     <option value="Umuyede">Umuyede</option>
                                 </select>
                             </div>
+                        </div>
+                        {/* Total Consumed Amount Summary */}
+                        <div className="mb-4 text-right">
+                            <span className="text-lg font-semibold">Total Consumed Amount: </span>
+                            <span className="text-xl font-bold text-secondary">{totalConsumedAmount} RWF</span>
                         </div>
                         {/* Employees Table */}
                         {paginatedEmployees.length > 0 ? (
@@ -212,20 +217,15 @@ const ShowFoodMenu = () => {
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
                                                                 </div>
-                                                                {/*
-                                                                    <div className="text-sm">
-                                                                        <strong>Time:</strong> {att.time || "N/A"}
-                                                                    </div>
-                                                                    <div className="text-sm">
-                                                                        <strong>Status:</strong> {att.attendance_status}
-                                                                    </div>
-                                                                    <div className="text-sm">
-                                                                        <strong>Food Menu:</strong>{" "}
-                                                                        {att.food_menu && att.food_menu.length > 0
-                                                                            ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
-                                                                            : "N/A"}
-                                                                    </div>
-                                                                */}
+                                                                <div className="text-sm">
+                                                                    <strong>Status:</strong> {att.attendance_status}
+                                                                </div>
+                                                                <div className="text-sm">
+                                                                    <strong>Food Menu:</strong>{" "}
+                                                                    {att.food_menu && att.food_menu.length > 0
+                                                                        ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
+                                                                        : "N/A"}
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -245,7 +245,7 @@ const ShowFoodMenu = () => {
                                 </p>
                             </div>
                         )}
-                        {/* Pagination Controls */}
+                        {/* Pagination Controls for Employees Table */}
                         {totalPages > 1 && (
                             <div className="flex justify-center mt-4">
                                 <button
