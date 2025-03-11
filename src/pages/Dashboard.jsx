@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { fetchEmployees, fetchAttendances, fetchFoodMenus } from '../api';
 import { Line, Bar } from 'react-chartjs-2';
 import { Link } from 'react-router-dom';
-import { CookingPot, RefreshCw, UserCheck, UserSquare } from 'lucide-react';
+import { CookingPot, HandCoins, RefreshCw, UserCheck, UserSquare } from 'lucide-react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -34,12 +34,12 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // New state for consumption date range filtering
+    // New state for consumption date range filtering; defaults to today.
     const currentDate = new Date().toISOString().split('T')[0];
     const [consumptionStartDate, setConsumptionStartDate] = useState(currentDate);
     const [consumptionEndDate, setConsumptionEndDate] = useState(currentDate);
 
-    // New state for consumption table pagination
+    // Consumption table pagination state
     const [consumptionCurrentPage, setConsumptionCurrentPage] = useState(1);
     const consumptionPageSize = 10;
 
@@ -121,7 +121,7 @@ const Dashboard = () => {
     // Graph 1: Monthly Attendance Trend
     // --------------------------------------------
     const now = new Date();
-    const currentMonth = now.getMonth(); // 0-indexed
+    const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     const monthlyAttendance = {};
     attendanceData.forEach(emp => {
@@ -273,8 +273,6 @@ const Dashboard = () => {
         .toFixed(2);
 
     // --------------- Pagination for Food Menu Consumption ---------------
-    const [consumptionCurrentPage, setConsumptionCurrentPage] = useState(1);
-    const consumptionPageSize = 10;
     const totalConsumptionRecords = consumptionTableData.length;
     const totalConsumptionPages = Math.ceil(totalConsumptionRecords / consumptionPageSize);
     const consumptionPaginatedData = consumptionTableData.slice(
@@ -297,7 +295,7 @@ const Dashboard = () => {
 
     return (
         <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 2xl:col-span-9">
+            <div className="col-span-12 2xl:col-span-12">
                 <div className="grid grid-cols-12 gap-6">
                     <div className="col-span-12 mt-8">
                         <div className="intro-y flex h-10 items-center">
@@ -345,7 +343,7 @@ const Dashboard = () => {
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
                                     <div className="box p-5">
                                         <div className="flex">
-                                            <UserSquare className="stroke-1.5 h-[28px] w-[28px] text-secondary" />
+                                            <HandCoins className="stroke-1.5 h-[28px] w-[28px] text-success" />
                                         </div>
                                         <div className="mt-6 text-3xl font-medium leading-8">{totalConsumptionAmount} RWF</div>
                                         <div className="mt-1 text-base text-slate-500">
@@ -513,7 +511,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="col-span-12 2xl:col-span-3">
+            {/**<div className="col-span-12 2xl:col-span-3">
                 <div className="-mb-10 pb-10 2xl:border-l">
                     <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
                         <div className="col-span-12 mt-3 md:col-span-6 xl:col-span-4 2xl:col-span-12 2xl:mt-8">
@@ -554,7 +552,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>**/}
         </div>
     );
 };
