@@ -248,11 +248,11 @@ const ShowEmployee = () => {
                 </div>
 
                 {/* Attendance History */}
-                <div className="col-span-12 lg:col-span-8">
-                    <div className="box p-5" ref={attendanceRef}>
-                        <div className="mb-5 flex justify-between items-center border-b pb-5">
-                            <span className="text-base font-medium">Attendance History</span>
-                            <div className="flex gap-3">
+                <div className="col-span-12 lg:col-span-7 2xl:col-span-8">
+                    <div className="box rounded-md p-5" ref={attendanceRef}>
+                        <div className="mb-5 flex flex-col sm:flex-row items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
+                            <div className="truncate text-base font-medium">Attendance History</div>
+                            <div className="ml-auto flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                                 <input
                                     type="date"
                                     value={dateStart}
@@ -260,7 +260,7 @@ const ShowEmployee = () => {
                                         setDateStart(e.target.value);
                                         setCurrentPage(1);
                                     }}
-                                    className="input-date"
+                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
                                 />
                                 <span className="text-slate-500">to</span>
                                 <input
@@ -270,7 +270,7 @@ const ShowEmployee = () => {
                                         setDateEnd(e.target.value);
                                         setCurrentPage(1);
                                     }}
-                                    className="input-date"
+                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
                                 />
                                 <select
                                     value={sortOption}
@@ -278,7 +278,7 @@ const ShowEmployee = () => {
                                         setSortOption(e.target.value);
                                         setCurrentPage(1);
                                     }}
-                                    className="select-sort"
+                                    className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
                                 >
                                     <option value="dateDesc">Date (Newest)</option>
                                     <option value="dateAsc">Date (Oldest)</option>
