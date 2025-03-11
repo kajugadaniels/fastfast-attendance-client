@@ -232,9 +232,8 @@ const Dashboard = () => {
     const latest5Records = latestAttendanceRecords.slice(0, 5);
 
     // --------------------------------------------
-    // Table: Today's Food Menu Consumption
+    // Today's Food Menu Consumption Table Data
     // --------------------------------------------
-    // For the current date, use foodMenuSummary to calculate total amount per food menu.
     const todayFoodMenuConsumption = Object.entries(foodMenuSummary);
 
     if (loading) {
@@ -365,7 +364,7 @@ const Dashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {todayFoodMenuConsumption = Object.entries(foodMenuSummary).map(([menuName, summary]) => {
+                                    {Object.entries(foodMenuSummary).map(([menuName, summary]) => {
                                         const totalAmount = summary.count * parseFloat(summary.price);
                                         return (
                                             <tr key={menuName} className="border-t">
@@ -380,59 +379,49 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="col-span-12 2xl:col-span-3">
-                    <div className="-mb-10 pb-10 2xl:border-l">
-                        <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
-                            <div className="col-span-12 mt-3 md:col-span-6 xl:col-span-4 2xl:col-span-12 2xl:mt-8">
-                                <div className="intro-x flex h-10 items-center">
-                                    <h2 className="mr-5 truncate text-lg font-medium">
-                                        Latest 5 Attended Employees
-                                    </h2>
-                                </div>
-                                {latest5Records.length > 0 ? (
-                                    <div className="mt-5">
-                                        {latest5Records.map((record, index) => (
-                                            <div key={index} className="intro-x">
-                                                <div className="box zoom-in mb-3 flex items-center px-5 py-3">
-                                                    <div className="image-fit h-10 w-10 flex-none overflow-hidden rounded-full">
-                                                        <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" alt="" />
+            <div className="col-span-12 2xl:col-span-3">
+                <div className="-mb-10 pb-10 2xl:border-l">
+                    <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
+                        <div className="col-span-12 mt-3 md:col-span-6 xl:col-span-4 2xl:col-span-12 2xl:mt-8">
+                            <div className="intro-x flex h-10 items-center">
+                                <h2 className="mr-5 truncate text-lg font-medium">
+                                    Latest 5 Attended Employees
+                                </h2>
+                            </div>
+                            {latest5Records.length > 0 ? (
+                                <div className="mt-5">
+                                    {latest5Records.map((record, index) => (
+                                        <div key={index} className="intro-x">
+                                            <div className="box zoom-in mb-3 flex items-center px-5 py-3">
+                                                <div className="image-fit h-10 w-10 flex-none overflow-hidden rounded-full">
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" alt="" />
+                                                </div>
+                                                <div className="ml-4 mr-auto">
+                                                    <div className="font-medium">
+                                                        {record.name}
                                                     </div>
-                                                    <div className="ml-4 mr-auto">
-                                                        <div className="font-medium">
-                                                            {record.name}
-                                                        </div>
-                                                        <div className="mt-0.5 text-xs text-slate-500">
-                                                            {record.attendance_date}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-success">
-                                                        {record.price} RWF
+                                                    <div className="mt-0.5 text-xs text-slate-500">
+                                                        {record.attendance_date}
                                                     </div>
                                                 </div>
+                                                <div className="text-success">
+                                                    {record.price} RWF
+                                                </div>
                                             </div>
-                                        ))}
-                                        <Link className="intro-x block w-full rounded-md border border-dotted border-slate-400 py-3 text-center text-slate-500 dark:border-darkmode-300" to="/attendance">
-                                            View More
-                                        </Link>
-                                    </div>
-                                ) : (
-                                    <p>No recent attendance records found.</p>
-                                )}
-                            </div>
+                                        </div>
+                                    ))}
+                                    <Link className="intro-x block w-full rounded-md border border-dotted border-slate-400 py-3 text-center text-slate-500 dark:border-darkmode-300" to="/attendance">
+                                        View More
+                                    </Link>
+                                </div>
+                            ) : (
+                                <p>No recent attendance records found.</p>
+                            )}
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Button to download Attendance Data as PDF based on filters */}
-            <div className="flex justify-center mt-4">
-                <button
-                    onClick={downloadAttendancePDF}
-                    className="px-5 py-2 bg-secondary text-white rounded-md shadow hover:bg-secondary-dark transition duration-200"
-                >
-                    Download Attendance PDF
-                </button>
             </div>
         </div>
     );
