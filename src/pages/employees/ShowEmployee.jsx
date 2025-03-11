@@ -24,6 +24,7 @@ const ShowEmployee = () => {
     const [isModalOpen, setIsModalOpen] = useState(false) // Controls modal visibility
     const [selectedFoodMenu, setSelectedFoodMenu] = useState(null) // Selected food menu for attendance
     const qrCodeRef = useRef() // For QR code download
+    const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null);
 
     // Ref for attendance history section for PDF generation
     const attendanceRef = useRef()
@@ -65,36 +66,30 @@ const ShowEmployee = () => {
     }
 
     const handleAttendanceSubmit = async () => {
-        if (selectedFoodMenu) {
-            try {
-                const response = await addAttendance({
-                    // Using finger_id from employeeData.employee
-                    finger_id: employeeData.employee.finger_id,
-                    food_menu: selectedFoodMenu.id,
-                })
-                if (response && response.message) {
-                    const successMessage = response.message.detail
-                    setMessage(successMessage)
-                    toast.success(successMessage)
-
-                    // Append the new attendance record to the employee's attendance history
-                    setEmployeeData(prevData => ({
-                        ...prevData,
-                        attendance_history: [...prevData.attendance_history, response.data],
-                    }))
-
-                    setIsModalOpen(false)
-                }
-            } catch (error) {
-                const errorMessage =
-                    error.response?.data?.message?.detail || 'Failed to record attendance.'
-                setMessage(errorMessage)
-                toast.error(errorMessage)
-            }
-        } else {
-            toast.error('Please select a food menu.')
+        if (!selectedFoodMenuId) {
+            toast.error('Please select a food menu.');
+            return;
         }
-    }
+        try {
+            const response = await addAttendance({
+                finger_id: employeeData.employee.finger_id,
+                food_menu: selectedFoodMenuId,
+            });
+            if (response && response.message) {
+                toast.success(response.message.detail);
+                // Optionally update local attendance history
+                setEmployeeData(prevData => ({
+                    ...prevData,
+                    attendance_history: [...prevData.attendance_history, response.data],
+                }));
+                setIsModalOpen(false);
+            }
+        } catch (error) {
+            const errorMessage =
+                error.response?.data?.message?.detail || 'Failed to record attendance.';
+            toast.error(errorMessage);
+        }
+    };
 
     const downloadQRCode = () => {
         if (qrCodeRef.current) {
@@ -400,16 +395,25 @@ const ShowEmployee = () => {
                                 <li
                                     key={menu.id}
                                     className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
-                                    onClick={() => setSelectedFoodMenu(menu)}
                                 >
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-800 dark:text-gray-100 font-medium">
-                                            {menu.name}
-                                        </span>
-                                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                                            {menu.price} RWF
-                                        </span>
-                                    </div>
+                                    <label className="flex items-center cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="foodMenu"
+                                            value={menu.id}
+                                            checked={selectedFoodMenuId === menu.id}
+                                            onChange={() => setSelectedFoodMenuId(menu.id)}
+                                            className="mr-2"
+                                        />
+                                        <div className="flex justify-between items-center w-full">
+                                            <span className="text-gray-800 dark:text-gray-100 font-medium">
+                                                {menu.name}
+                                            </span>
+                                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                                                {menu.price} RWF
+                                            </span>
+                                        </div>
+                                    </label>
                                 </li>
                             ))}
                         </ul>
