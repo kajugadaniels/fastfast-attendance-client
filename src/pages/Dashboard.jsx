@@ -411,52 +411,85 @@ const Dashboard = () => {
 
                     {/* Food Menu Consumption (Filtered) Table with Date Range Filters & Pagination */}
                     <div className="col-span-12 mt-6">
-                        <div className="intro-y flex h-10 items-center sm:flex">
-                            <h2 className="mr-5 truncate text-lg font-medium">
-                                Food Menu Consumption (Filtered)
-                            </h2>
-                            <div className="mt-3 flex items-center sm:ml-auto sm:mt-0">
-                                <input
-                                    type="date"
-                                    value={consumptionStartDate}
-                                    onChange={e => {
-                                        setConsumptionStartDate(e.target.value);
-                                        setConsumptionCurrentPage(1);
-                                    }}
-                                    className="w-40 border rounded-md p-2"
-                                />
-                                <span className="text-sm text-slate-700">To:</span>
-                                <input
-                                    type="date"
-                                    value={consumptionEndDate}
-                                    onChange={e => {
-                                        setConsumptionEndDate(e.target.value);
-                                        setConsumptionCurrentPage(1);
-                                    }}
-                                    className="w-40 border rounded-md p-2"
-                                />
-                            </div>
-                        </div>
-                        <div className="intro-y box mt-5 p-5">
-                            <table className="min-w-full table-auto border-collapse">
-                                <thead>
-                                    <tr>
-                                        <th className="px-4 py-2 border">Food Menu</th>
-                                        <th className="px-4 py-2 border">Number of Employees</th>
-                                        <th className="px-4 py-2 border">Total Amount (RWF)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {consumptionPaginatedData.map(item => (
-                                        <tr key={item.name} className="border-t">
-                                            <td className="px-4 py-2">{item.name}</td>
-                                            <td className="px-4 py-2">{item.count}</td>
-                                            <td className="px-4 py-2">{item.totalAmount}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div className="intro-y block h-10 items-center sm:flex">
+                    <h2 className="mr-5 truncate text-lg font-medium">
+                        Food Menu Consumption (Filtered)
+                    </h2>
+                    <div className="mt-3 flex items-center sm:ml-auto sm:mt-0">
+                        <input
+                            type="date"
+                            value={consumptionStartDate}
+                            onChange={e => setConsumptionStartDate(e.target.value)}
+                            className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                        />
+                        <span className="text-sm text-slate-700">To:</span>
+                        <input
+                            type="date"
+                            value={consumptionEndDate}
+                            onChange={e => setConsumptionEndDate(e.target.value)}
+                            className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                        />
+                    </div>
+                </div>
+                <div className="intro-y mt-8 overflow-auto sm:mt-0 lg:overflow-visible">
+                    <table className="w-full text-left border-separate border-spacing-y-[10px] sm:mt-2">
+                        <thead className="">
+                            <tr className="">
+                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
+                                    Images
+                                </th>
+                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
+                                    Food Menu
+                                </th>
+                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
+                                    Number of Employees
+                                </th>
+                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
+                                    Total Amount (RWF)
+                                </th>
+                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {consumptionTableData.map(item => (
+                                <tr className="intro-x" key={item.name}>
+                                    <td className="px-5 py-3 border-b dark:border-darkmode-300 box w-40 rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
+                                        <div className="flex">
+                                            <div className="image-fit zoom-in h-10 w-10">
+                                                <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" className="tooltip cursor-pointer rounded-full shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)] dark:shadow-[0px_0px_0px_2px_#3f4865,_1px_1px_5px_rgba(0,0,0,0.32)]" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-5 py-3 border-b dark:border-darkmode-300 box rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
+                                        <a className="whitespace-nowrap font-medium" href="#">
+                                            {item.name}
+                                        </a>
+                                        <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
+                                            {item.price} RWF
+                                        </div>
+                                    </td>
+                                    <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 box rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
+                                        {item.count}
+                                    </td>
+                                    <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 box rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
+                                        {item.totalAmount} RWF
+                                    </td>
+                                    <td className="px-5 py-3 border-b dark:border-darkmode-300 box w-56 rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600 before:absolute before:inset-y-0 before:left-0 before:my-auto before:block before:h-8 before:w-px before:bg-slate-200 before:dark:bg-darkmode-400">
+                                        <div className="flex items-center justify-center">
+                                            <a className="mr-3 flex items-center" href="">
+                                                <i data-lucide="check-square" className="stroke-1.5 mr-1 h-4 w-4"></i>
+                                                View
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            
                         {/* Consumption Table Pagination */}
                         {totalConsumptionPages > 1 && (
                             <div className="intro-y mt-3 flex flex-wrap items-center sm:flex-row sm:flex-nowrap">
