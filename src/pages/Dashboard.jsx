@@ -34,6 +34,11 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // New state for consumption date range filtering
+    const currentDate = new Date().toISOString().split('T')[0];
+    const [consumptionStartDate, setConsumptionStartDate] = useState(currentDate);
+    const [consumptionEndDate, setConsumptionEndDate] = useState(currentDate);
+
     // Fetch employees, attendance data, and food menus on component mount
     useEffect(() => {
         const fetchAllData = async () => {
@@ -57,9 +62,6 @@ const Dashboard = () => {
         fetchAllData();
     }, []);
 
-    // Get current date in YYYY-MM-DD format
-    const currentDate = new Date().toISOString().split('T')[0];
-
     // Helper function to format a date object to "YYYY-MM-DD"
     const formatDate = (dateObj) => {
         return dateObj.toISOString().split('T')[0];
@@ -68,6 +70,7 @@ const Dashboard = () => {
     // --------------------------------------------
     // Attendance Summary for Today (by Food Menu)
     // --------------------------------------------
+    // (This is still computed based on currentDate)
     const todayAttendanceRecords = attendanceData.reduce((acc, emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
             const todayRecord = emp.attendance_history.find(
@@ -84,7 +87,6 @@ const Dashboard = () => {
         return acc;
     }, []);
 
-    // Group today's attendance by food menu name
     const foodMenuSummary = todayAttendanceRecords.reduce((acc, record) => {
         const menu = record.food_menu[0]; // assuming one food menu per attendance record
         const menuName = menu.name;
@@ -96,7 +98,6 @@ const Dashboard = () => {
         return acc;
     }, {});
 
-    // Total number of employees attended today
     const totalAttendedToday = todayAttendanceRecords.length;
 
     // --------------------------------------------
@@ -116,12 +117,10 @@ const Dashboard = () => {
     // --------------------------------------------
     // Graph 1: Monthly Attendance Trend
     // --------------------------------------------
-    // Aggregate attendance counts per day for the current month
     const now = new Date();
     const currentMonth = now.getMonth(); // 0-indexed
     const currentYear = now.getFullYear();
     const monthlyAttendance = {};
-
     attendanceData.forEach(emp => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
             emp.attendance_history.forEach(record => {
@@ -131,7 +130,6 @@ const Dashboard = () => {
                     recordDate.getFullYear() === currentYear &&
                     record.attendance_status === 'Present'
                 ) {
-                    // record.attendance_date is assumed to be in YYYY-MM-DD format
                     const dayStr = record.attendance_date;
                     if (!monthlyAttendance[dayStr]) {
                         monthlyAttendance[dayStr] = 0;
@@ -141,8 +139,6 @@ const Dashboard = () => {
             });
         }
     });
-
-    // Build data arrays for the current month
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const attendanceLabels = [];
     const attendanceCounts = [];
@@ -151,7 +147,6 @@ const Dashboard = () => {
         attendanceLabels.push(dayStr);
         attendanceCounts.push(monthlyAttendance[dayStr] || 0);
     }
-
     const monthlyAttendanceData = {
         labels: attendanceLabels,
         datasets: [
@@ -169,7 +164,6 @@ const Dashboard = () => {
     // --------------------------------------------
     // Graph 2: Employees by Food Menu (Unique Count)
     // --------------------------------------------
-    // For each employee, add their id to a set corresponding to a food menu
     const foodMenuEmployeeAssignment = {};
     attendanceData.forEach(emp => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
@@ -179,7 +173,6 @@ const Dashboard = () => {
                     if (!foodMenuEmployeeAssignment[menuName]) {
                         foodMenuEmployeeAssignment[menuName] = new Set();
                     }
-                    // Use a unique identifier (employee_id or id)
                     foodMenuEmployeeAssignment[menuName].add(emp.employee_id || emp.id);
                 }
             });
@@ -191,7 +184,6 @@ const Dashboard = () => {
     });
     const foodMenuGraphLabels = Object.keys(foodMenuEmployeeCounts);
     const foodMenuGraphData = Object.values(foodMenuEmployeeCounts);
-
     const foodMenuChartData = {
         labels: foodMenuGraphLabels,
         datasets: [
@@ -206,7 +198,6 @@ const Dashboard = () => {
     // --------------------------------------------
     // Latest 5 Attended Employees
     // --------------------------------------------
-    // Flatten all "Present" attendance records from all employees into one list.
     const latestAttendanceRecords = [];
     attendanceData.forEach(emp => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
@@ -225,20 +216,45 @@ const Dashboard = () => {
             });
         }
     });
-    // Sort descending by attendance_date (assuming YYYY-MM-DD format)
     latestAttendanceRecords.sort(
         (a, b) => new Date(b.attendance_date) - new Date(a.attendance_date)
     );
     const latest5Records = latestAttendanceRecords.slice(0, 5);
 
     // --------------------------------------------
-    // Today's Food Menu Consumption Table Data
+    // Food Menu Consumption for Filtered Date Range
     // --------------------------------------------
-    // Instead of using only those menus consumed, we loop through all food menus.
-    // For each menu, if it's present in foodMenuSummary, show its count and total amount,
-    // otherwise display 0.
-    const todayFoodMenuConsumption = foodMenus.map(menu => {
-        const summary = foodMenuSummary[menu.name] || { count: 0, price: menu.price };
+    // Filter attendance records based on consumptionStartDate and consumptionEndDate
+    const consumptionAttendanceRecords = [];
+    attendanceData.forEach(emp => {
+        if (emp.attendance_history && emp.attendance_history.length > 0) {
+            emp.attendance_history.forEach(record => {
+                if (
+                    record.attendance_status === 'Present' &&
+                    record.food_menu &&
+                    record.food_menu.length > 0 &&
+                    record.attendance_date >= consumptionStartDate &&
+                    record.attendance_date <= consumptionEndDate
+                ) {
+                    consumptionAttendanceRecords.push(record);
+                }
+            });
+        }
+    });
+    const foodMenuConsumptionSummary = consumptionAttendanceRecords.reduce((acc, record) => {
+        const menu = record.food_menu[0];
+        const menuName = menu.name;
+        if (acc[menuName]) {
+            acc[menuName].count++;
+        } else {
+            acc[menuName] = { count: 1, price: menu.price };
+        }
+        return acc;
+    }, {});
+
+    // Build table data: loop through ALL food menus
+    const consumptionTableData = foodMenus.map(menu => {
+        const summary = foodMenuConsumptionSummary[menu.name] || { count: 0, price: menu.price };
         const totalAmount = summary.count * parseFloat(menu.price);
         return {
             name: menu.name,
@@ -247,10 +263,14 @@ const Dashboard = () => {
         };
     });
 
+    // Total consumption amount card (sum of all totalAmount)
+    const totalConsumptionAmount = consumptionTableData
+        .reduce((sum, item) => sum + parseFloat(item.totalAmount), 0)
+        .toFixed(2);
+
     if (loading) {
         return <div className="text-center py-10">Loading dashboard...</div>;
     }
-
     if (error) {
         return <div className="text-center py-10 text-red-500">{error}</div>;
     }
@@ -268,7 +288,7 @@ const Dashboard = () => {
                             </Link>
                         </div>
                         <div className="mt-5 grid grid-cols-12 gap-6">
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -279,7 +299,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -290,7 +310,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -298,6 +318,19 @@ const Dashboard = () => {
                                         </div>
                                         <div className="mt-6 text-3xl font-medium leading-8">{employees.length}</div>
                                         <div className="mt-1 text-base text-slate-500">Total Employees</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
+                                    <div className="box p-5">
+                                        <div className="flex">
+                                            <UserSquare className="stroke-1.5 h-[28px] w-[28px] text-secondary" />
+                                        </div>
+                                        <div className="mt-6 text-3xl font-medium leading-8">{totalConsumptionAmount} RWF</div>
+                                        <div className="mt-1 text-base text-slate-500">
+                                            Total Consumption Amount
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -358,12 +391,28 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Today's Food Menu Consumption Table */}
+                    {/* Today's Food Menu Consumption Table with Date Range Filters */}
                     <div className="col-span-12 mt-8">
                         <div className="intro-y flex h-10 items-center">
                             <h2 className="mr-5 truncate text-lg font-medium">
-                                Today's Food Menu Consumption
+                                Food Menu Consumption (Filtered)
                             </h2>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mb-4">
+                            <span className="text-sm text-slate-700">From:</span>
+                            <input
+                                type="date"
+                                value={consumptionStartDate}
+                                onChange={e => setConsumptionStartDate(e.target.value)}
+                                className="w-40 border rounded-md p-2"
+                            />
+                            <span className="text-sm text-slate-700">To:</span>
+                            <input
+                                type="date"
+                                value={consumptionEndDate}
+                                onChange={e => setConsumptionEndDate(e.target.value)}
+                                className="w-40 border rounded-md p-2"
+                            />
                         </div>
                         <div className="intro-y box mt-5 p-5">
                             <table className="min-w-full table-auto border-collapse">
@@ -375,17 +424,13 @@ const Dashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {foodMenus.map(menu => {
-                                        const summary = foodMenuSummary[menu.name] || { count: 0, price: menu.price };
-                                        const totalAmount = summary.count * parseFloat(menu.price);
-                                        return (
-                                            <tr key={menu.id} className="border-t">
-                                                <td className="px-4 py-2">{menu.name}</td>
-                                                <td className="px-4 py-2">{summary.count}</td>
-                                                <td className="px-4 py-2">{totalAmount.toFixed(2)}</td>
-                                            </tr>
-                                        );
-                                    })}
+                                    {consumptionTableData.map(item => (
+                                        <tr key={item.name} className="border-t">
+                                            <td className="px-4 py-2">{item.name}</td>
+                                            <td className="px-4 py-2">{item.count}</td>
+                                            <td className="px-4 py-2">{item.totalAmount}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
