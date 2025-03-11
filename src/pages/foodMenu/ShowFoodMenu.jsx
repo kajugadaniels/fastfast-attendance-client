@@ -119,68 +119,71 @@ const ShowFoodMenu = () => {
                 </div>
 
                 {/* Employees with Attendance History */}
-                <div className="col-span-12 lg:col-span-8">
-                    <div className="box p-5">
-                        <div className="mb-5 border-b pb-5">
-                            <span className="text-base font-medium">Employees with Attendance History</span>
-                        </div>
-                        {/* Filter Bar */}
-                        <div className="flex flex-wrap gap-4 mb-4">
-                            <input
-                                type="text"
-                                placeholder="Search by name..."
-                                value={searchTerm}
-                                onChange={(e) => {
-                                    setSearchTerm(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                                className="border rounded-md p-2"
-                            />
-                            <input
-                                type="date"
-                                value={filterFromDate}
-                                onChange={(e) => {
-                                    setFilterFromDate(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                                className="border rounded-md p-2"
-                            />
-                            <input
-                                type="date"
-                                value={filterToDate}
-                                onChange={(e) => {
-                                    setFilterToDate(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                                className="border rounded-md p-2"
-                            />
-                            <select
-                                value={filterGender}
-                                onChange={(e) => {
-                                    setFilterGender(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                                className="border rounded-md p-2"
-                            >
-                                <option value="">All Genders</option>
-                                <option value="M">Male</option>
-                                <option value="F">Female</option>
-                                <option value="O">Other</option>
-                            </select>
-                            <select
-                                value={filterPosition}
-                                onChange={(e) => {
-                                    setFilterPosition(e.target.value)
-                                    setCurrentPage(1)
-                                }}
-                                className="border rounded-md p-2"
-                            >
-                                <option value="">All Positions</option>
-                                <option value="Staff">Staff</option>
-                                <option value="Umwubatsi">Umwubatsi</option>
-                                <option value="Umufundi">Umufundi</option>
-                                <option value="Umuyede">Umuyede</option>
-                            </select>
+                <div className="col-span-12 lg:col-span-7 2xl:col-span-8">
+                    <div className="box rounded-md p-5">
+                        <div className="mb-5 flex flex-col sm:flex-row items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
+                            <div className="ml-auto flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                                {/* Date Range Filters */}
+                                <input
+                                    type="date"
+                                    value={filterFromDate}
+                                    onChange={(e) => {
+                                        setFilterFromDate(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                />
+                                <span className="text-slate-500">to</span>
+                                <input
+                                    type="date"
+                                    value={filterToDate}
+                                    onChange={(e) => {
+                                        setFilterToDate(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                />
+                                {/* Search Filter */}
+                                <input
+                                    type="text"
+                                    placeholder="Search by name..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="w-56 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                />
+                                {/*
+                                <select
+                                    value={filterGender}
+                                    onChange={(e) => {
+                                        setFilterGender(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
+                                >
+                                    <option value="">All Genders</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
+                                */}
+                                <select
+                                    value={filterPosition}
+                                    onChange={(e) => {
+                                        setFilterPosition(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="transition duration-200 ease-in-out text-sm border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 !box w-44"
+                                >
+                                    <option value="">All Positions</option>
+                                    <option value="Staff">Staff</option>
+                                    <option value="Umwubatsi">Umwubatsi</option>
+                                    <option value="Umufundi">Umufundi</option>
+                                    <option value="Umuyede">Umuyede</option>
+                                </select>
+                            </div>
                         </div>
                         {/* Employees Table */}
                         {paginatedEmployees.length > 0 ? (
@@ -209,18 +212,20 @@ const ShowFoodMenu = () => {
                                                                 <div className="text-sm">
                                                                     <strong>Date:</strong> {att.attendance_date}
                                                                 </div>
-                                                                <div className="text-sm">
-                                                                    <strong>Time:</strong> {att.time || "N/A"}
-                                                                </div>
-                                                                <div className="text-sm">
-                                                                    <strong>Status:</strong> {att.attendance_status}
-                                                                </div>
-                                                                <div className="text-sm">
-                                                                    <strong>Food Menu:</strong>{" "}
-                                                                    {att.food_menu && att.food_menu.length > 0
-                                                                        ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
-                                                                        : "N/A"}
-                                                                </div>
+                                                                {/*
+                                                                    <div className="text-sm">
+                                                                        <strong>Time:</strong> {att.time || "N/A"}
+                                                                    </div>
+                                                                    <div className="text-sm">
+                                                                        <strong>Status:</strong> {att.attendance_status}
+                                                                    </div>
+                                                                    <div className="text-sm">
+                                                                        <strong>Food Menu:</strong>{" "}
+                                                                        {att.food_menu && att.food_menu.length > 0
+                                                                            ? `${att.food_menu[0].name} - ${att.food_menu[0].price} RWF`
+                                                                            : "N/A"}
+                                                                    </div>
+                                                                */}
                                                             </div>
                                                         ))}
                                                     </div>
