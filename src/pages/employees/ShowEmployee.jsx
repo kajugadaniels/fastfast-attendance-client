@@ -23,8 +23,8 @@ const ShowEmployee = () => {
     const [message, setMessage] = useState('')
     const [isModalOpen, setIsModalOpen] = useState(false) // Controls modal visibility
     const [selectedFoodMenu, setSelectedFoodMenu] = useState(null) // Selected food menu for attendance
+    const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null)
     const qrCodeRef = useRef() // For QR code download
-    const [selectedFoodMenuId, setSelectedFoodMenuId] = useState(null);
 
     // Ref for attendance history section for PDF generation
     const attendanceRef = useRef()
@@ -67,29 +67,30 @@ const ShowEmployee = () => {
 
     const handleAttendanceSubmit = async () => {
         if (!selectedFoodMenuId) {
-            toast.error('Please select a food menu.');
-            return;
+            toast.error('Please select a food menu.')
+            return
         }
         try {
             const response = await addAttendance({
                 finger_id: employeeData.employee.finger_id,
                 food_menu: selectedFoodMenuId,
-            });
+            })
             if (response && response.message) {
-                toast.success(response.message.detail);
-                // Optionally update local attendance history
+                toast.success(response.message.detail)
+                // Append the new attendance record to the employee's attendance history and reset current page to 1
                 setEmployeeData(prevData => ({
                     ...prevData,
                     attendance_history: [...prevData.attendance_history, response.data],
-                }));
-                setIsModalOpen(false);
+                }))
+                setCurrentPage(1)
+                setIsModalOpen(false)
             }
         } catch (error) {
             const errorMessage =
-                error.response?.data?.message?.detail || 'Failed to record attendance.';
-            toast.error(errorMessage);
+                error.response?.data?.message?.detail || 'Failed to record attendance.'
+            toast.error(errorMessage)
         }
-    };
+    }
 
     const downloadQRCode = () => {
         if (qrCodeRef.current) {
