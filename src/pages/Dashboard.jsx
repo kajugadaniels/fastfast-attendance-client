@@ -3,7 +3,15 @@ import { toast } from 'react-toastify';
 import { fetchEmployees, fetchAttendances, fetchFoodMenus } from '../api';
 import { Line, Bar } from 'react-chartjs-2';
 import { Link } from 'react-router-dom';
-import { CookingPot, HandCoins, RefreshCw, UserCheck, UserSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    CookingPot,
+    HandCoins,
+    RefreshCw,
+    UserCheck,
+    UserSquare,
+    ChevronLeft,
+    ChevronRight,
+} from 'lucide-react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -28,22 +36,23 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
+    // State declarations for dashboard data
     const [employees, setEmployees] = useState([]);
     const [attendanceData, setAttendanceData] = useState([]);
     const [foodMenus, setFoodMenus] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // New state for consumption date range filtering; defaults to today.
+    // Consumption date range filtering (default to today)
     const currentDate = new Date().toISOString().split('T')[0];
     const [consumptionStartDate, setConsumptionStartDate] = useState(currentDate);
     const [consumptionEndDate, setConsumptionEndDate] = useState(currentDate);
 
-    // Consumption table pagination state
+    // Pagination state for Food Menu Consumption table
     const [consumptionCurrentPage, setConsumptionCurrentPage] = useState(1);
     const consumptionPageSize = 5;
 
-    // Fetch employees, attendance data, and food menus on component mount
+    // Fetch all necessary data when component mounts
     useEffect(() => {
         const fetchAllData = async () => {
             try {
@@ -66,11 +75,6 @@ const Dashboard = () => {
         fetchAllData();
     }, []);
 
-    // Helper function to format a date object to "YYYY-MM-DD"
-    const formatDate = (dateObj) => {
-        return dateObj.toISOString().split('T')[0];
-    };
-
     // --------------------------------------------
     // Attendance Summary for Today (by Food Menu)
     // --------------------------------------------
@@ -91,7 +95,7 @@ const Dashboard = () => {
     }, []);
 
     const foodMenuSummary = todayAttendanceRecords.reduce((acc, record) => {
-        const menu = record.food_menu[0]; // assuming one food menu per attendance record
+        const menu = record.food_menu[0]; // Assuming one food menu per attendance record
         const menuName = menu.name;
         if (acc[menuName]) {
             acc[menuName].count++;
@@ -124,9 +128,9 @@ const Dashboard = () => {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     const monthlyAttendance = {};
-    attendanceData.forEach(emp => {
+    attendanceData.forEach((emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
-            emp.attendance_history.forEach(record => {
+            emp.attendance_history.forEach((record) => {
                 const recordDate = new Date(record.attendance_date);
                 if (
                     recordDate.getMonth() === currentMonth &&
@@ -168,9 +172,9 @@ const Dashboard = () => {
     // Graph 2: Employees by Food Menu (Unique Count)
     // --------------------------------------------
     const foodMenuEmployeeAssignment = {};
-    attendanceData.forEach(emp => {
+    attendanceData.forEach((emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
-            emp.attendance_history.forEach(record => {
+            emp.attendance_history.forEach((record) => {
                 if (
                     record.attendance_date === currentDate &&
                     record.attendance_status === 'Present' &&
@@ -187,12 +191,11 @@ const Dashboard = () => {
         }
     });
     const foodMenuEmployeeCounts = {};
-    Object.keys(foodMenuEmployeeAssignment).forEach(menuName => {
+    Object.keys(foodMenuEmployeeAssignment).forEach((menuName) => {
         foodMenuEmployeeCounts[menuName] = foodMenuEmployeeAssignment[menuName].size;
     });
     const foodMenuGraphLabels = Object.keys(foodMenuEmployeeCounts);
     const foodMenuGraphData = Object.values(foodMenuEmployeeCounts);
-
     const foodMenuChartData = {
         labels: foodMenuGraphLabels,
         datasets: [
@@ -208,9 +211,9 @@ const Dashboard = () => {
     // Latest 5 Attended Employees
     // --------------------------------------------
     const latestAttendanceRecords = [];
-    attendanceData.forEach(emp => {
+    attendanceData.forEach((emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
-            emp.attendance_history.forEach(record => {
+            emp.attendance_history.forEach((record) => {
                 if (
                     record.attendance_status === 'Present' &&
                     record.food_menu &&
@@ -235,9 +238,9 @@ const Dashboard = () => {
     // --------------------------------------------
     // Filter attendance records based on consumptionStartDate and consumptionEndDate
     const consumptionAttendanceRecords = [];
-    attendanceData.forEach(emp => {
+    attendanceData.forEach((emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
-            emp.attendance_history.forEach(record => {
+            emp.attendance_history.forEach((record) => {
                 if (
                     record.attendance_status === 'Present' &&
                     record.food_menu &&
@@ -261,8 +264,8 @@ const Dashboard = () => {
         return acc;
     }, {});
 
-    // Build table data: loop through ALL food menus
-    const consumptionTableData = foodMenus.map(menu => {
+    // Build consumption table data by looping through ALL food menus
+    const consumptionTableData = foodMenus.map((menu) => {
         const summary = foodMenuConsumptionSummary[menu.name] || { count: 0, price: menu.price };
         const totalAmount = summary.count * parseFloat(menu.price);
         return {
@@ -272,11 +275,6 @@ const Dashboard = () => {
             price: menu.price,
         };
     });
-
-    // Total consumption amount card (sum of all totalAmount)
-    const totalConsumptionAmount = consumptionTableData
-        .reduce((sum, item) => sum + parseFloat(item.totalAmount), 0)
-        .toFixed(2);
 
     // --------------- Pagination for Food Menu Consumption ---------------
     const totalConsumptionRecords = consumptionTableData.length;
@@ -301,7 +299,8 @@ const Dashboard = () => {
 
     return (
         <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12 2xl:col-span-12">
+            {/* Dashboard Summary Cards and Graphs */}
+            <div className="col-span-12 2xl:col-span-9">
                 <div className="grid grid-cols-12 gap-6">
                     <div className="col-span-12 mt-8">
                         <div className="intro-y flex h-10 items-center">
@@ -313,7 +312,7 @@ const Dashboard = () => {
                         </div>
                         <div className="mt-5 grid grid-cols-12 gap-6">
                             <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
-                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
                                             <UserCheck className="stroke-1.5 h-[28px] w-[28px] text-primary" />
@@ -324,7 +323,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
-                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
                                             <CookingPot className="stroke-1.5 h-[28px] w-[28px] text-pending" />
@@ -335,7 +334,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
-                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
                                             <UserSquare className="stroke-1.5 h-[28px] w-[28px] text-warning" />
@@ -346,166 +345,169 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
-                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50 before:content-['']">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
                                             <HandCoins className="stroke-1.5 h-[28px] w-[28px] text-success" />
                                         </div>
-                                        <div className="mt-6 text-3xl font-medium leading-8">{totalConsumptionAmount} RWF</div>
-                                        <div className="mt-1 text-base text-slate-500">
-                                            Total Consumption Amount
+                                        <div className="mt-6 text-3xl font-medium leading-8">
+                                            {consumptionTableData.reduce((sum, item) => sum + parseFloat(item.totalAmount), 0).toFixed(2)} RWF
                                         </div>
+                                        <div className="mt-1 text-base text-slate-500">Total Consumption Amount</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Monthly Attendance Trend */}
+                    {/* Monthly Attendance Trend Graph */}
                     <div className="col-span-12 mt-8 lg:col-span-6">
                         <div className="intro-y block h-10 items-center sm:flex">
                             <h2 className="mr-5 truncate text-lg font-medium">Monthly Attendance Trend</h2>
                         </div>
-                        <div className="intro-y box mt-12 p-5 sm:mt-5">
-                            <div className="relative before:content-[''] before:block before:absolute before:w-16 before:left-0 before:top-0 before:bottom-0 before:ml-10 before:mb-7 before:bg-gradient-to-r before:from-white before:via-white/80 before:to-transparent before:dark:from-darkmode-600 after:content-[''] after:block after:absolute after:w-16 after:right-0 after:top-0 after:bottom-0 after:mb-7 after:bg-gradient-to-l after:from-white after:via-white/80 after:to-transparent after:dark:from-darkmode-600">
-                                <div className="w-auto h-[275px]">
-                                    <Line
-                                        data={monthlyAttendanceData}
-                                        options={{
-                                            responsive: true,
-                                            plugins: {
-                                                legend: { position: 'top' },
-                                                title: {
-                                                    display: true,
-                                                    text: 'Daily Attendance in Current Month',
-                                                },
+                        <div className="intro-y box mt-12 p-5">
+                            <div className="w-auto h-[275px]">
+                                <Line
+                                    data={monthlyAttendanceData}
+                                    options={{
+                                        responsive: true,
+                                        plugins: {
+                                            legend: { position: 'top' },
+                                            title: {
+                                                display: true,
+                                                text: 'Daily Attendance in Current Month',
                                             },
-                                        }}
-                                    />
-                                </div>
+                                        },
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
 
-                    {/* Employees by Food Menu */}
+                    {/* Employees by Food Menu Graph */}
                     <div className="col-span-12 mt-8 sm:col-span-6 lg:col-span-6">
                         <div className="intro-y flex h-10 items-center">
-                            <h2 className="mr-5 truncate text-lg font-medium">
-                                Employees by Food Menu
-                            </h2>
+                            <h2 className="mr-5 truncate text-lg font-medium">Employees by Food Menu</h2>
                         </div>
                         <div className="intro-y box mt-5 p-5">
-                            <div className="mt-3">
-                                <div className="w-auto h-[300px]">
-                                    <Bar
-                                        data={foodMenuChartData}
-                                        options={{
-                                            responsive: true,
-                                            plugins: {
-                                                legend: { position: 'top' },
-                                                title: {
-                                                    display: true,
-                                                    text: 'Unique Employee Distribution by Food Menu (Today)',
-                                                },
+                            <div className="w-auto h-[300px]">
+                                <Bar
+                                    data={foodMenuChartData}
+                                    options={{
+                                        responsive: true,
+                                        plugins: {
+                                            legend: { position: 'top' },
+                                            title: {
+                                                display: true,
+                                                text: 'Unique Employee Distribution by Food Menu (Today)',
                                             },
-                                        }}
-                                    />
-                                </div>
+                                        },
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
 
                     {/* Food Menu Consumption (Filtered) Table with Date Range Filters & Pagination */}
                     <div className="col-span-12 mt-6">
-                    <div className="intro-y block h-10 items-center sm:flex">
-                    <h2 className="mr-5 truncate text-lg font-medium">
-                        Food Menu Consumption (Filtered)
-                    </h2>
-                    <div className="mt-3 flex items-center sm:ml-auto sm:mt-0">
-                        <input
-                            type="date"
-                            value={consumptionStartDate}
-                            onChange={e => setConsumptionStartDate(e.target.value)}
-                            className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
-                        />
-                        <span className="text-sm text-slate-700">To:</span>
-                        <input
-                            type="date"
-                            value={consumptionEndDate}
-                            onChange={e => setConsumptionEndDate(e.target.value)}
-                            className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
-                        />
-                    </div>
-                </div>
-                <div className="intro-y mt-8 overflow-auto sm:mt-0 lg:overflow-visible">
-                    <table className="w-full text-left border-separate border-spacing-y-[10px] sm:mt-2">
-                        <thead className="">
-                            <tr className="">
-                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
-                                    Images
-                                </th>
-                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
-                                    Food Menu
-                                </th>
-                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
-                                    Number of Employees
-                                </th>
-                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
-                                    Total Amount (RWF)
-                                </th>
-                                <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {consumptionTableData.map(item => (
-                                <tr className="intro-x" key={item.name}>
-                                    <td className="px-5 py-3 border-b dark:border-darkmode-300 box w-40 rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
-                                        <div className="flex">
-                                            <div className="image-fit zoom-in h-10 w-10">
-                                                <img src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png" className="tooltip cursor-pointer rounded-full shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)] dark:shadow-[0px_0px_0px_2px_#3f4865,_1px_1px_5px_rgba(0,0,0,0.32)]" />
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-3 border-b dark:border-darkmode-300 box rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
-                                        <a className="whitespace-nowrap font-medium" href="#">
-                                            {item.name}
-                                        </a>
-                                        <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
-                                            {item.price} RWF
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 box rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
-                                        {item.count}
-                                    </td>
-                                    <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 box rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600">
-                                        {item.totalAmount} RWF
-                                    </td>
-                                    <td className="px-5 py-3 border-b dark:border-darkmode-300 box w-56 rounded-l-none rounded-r-none border-x-0 shadow-[5px_3px_5px_#00000005] first:rounded-l-[0.6rem] first:border-l last:rounded-r-[0.6rem] last:border-r dark:bg-darkmode-600 before:absolute before:inset-y-0 before:left-0 before:my-auto before:block before:h-8 before:w-px before:bg-slate-200 before:dark:bg-darkmode-400">
-                                        <div className="flex items-center justify-center">
-                                            <a className="mr-3 flex items-center" href="">
-                                                <i data-lucide="check-square" className="stroke-1.5 mr-1 h-4 w-4"></i>
-                                                View
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            
-                        {/* Consumption Table Pagination */}
+                        <div className="intro-y block h-10 items-center sm:flex">
+                            <h2 className="mr-5 truncate text-lg font-medium">
+                                Food Menu Consumption (Filtered)
+                            </h2>
+                            <div className="mt-3 flex items-center sm:ml-auto sm:mt-0">
+                                <input
+                                    type="date"
+                                    value={consumptionStartDate}
+                                    onChange={(e) => {
+                                        setConsumptionStartDate(e.target.value);
+                                        setConsumptionCurrentPage(1);
+                                    }}
+                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                />
+                                <span className="text-sm text-slate-700 mx-2">To:</span>
+                                <input
+                                    type="date"
+                                    value={consumptionEndDate}
+                                    onChange={(e) => {
+                                        setConsumptionEndDate(e.target.value);
+                                        setConsumptionCurrentPage(1);
+                                    }}
+                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                />
+                            </div>
+                        </div>
+                        <div className="intro-y mt-8 overflow-auto sm:mt-0 lg:overflow-visible">
+                            <table className="w-full text-left border-separate border-spacing-y-[10px] sm:mt-2">
+                                <thead>
+                                    <tr>
+                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
+                                            Images
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
+                                            Food Menu
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
+                                            Number of Employees
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
+                                            Total Amount (RWF)
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {consumptionPaginatedData.map((item) => (
+                                        <tr className="intro-x" key={item.name}>
+                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 box w-40 shadow-sm">
+                                                <div className="flex">
+                                                    <div className="image-fit zoom-in h-10 w-10">
+                                                        <img
+                                                            src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
+                                                            alt="Food Menu"
+                                                            className="tooltip cursor-pointer rounded-full"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 shadow-sm">
+                                                <a className="whitespace-nowrap font-medium" href="#">
+                                                    {item.name}
+                                                </a>
+                                                <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
+                                                    {item.price} RWF
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 shadow-sm">
+                                                {item.count}
+                                            </td>
+                                            <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 shadow-sm">
+                                                {item.totalAmount} RWF
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 shadow-sm">
+                                                <div className="flex items-center justify-center">
+                                                    <a className="mr-3 flex items-center" href="#">
+                                                        <i data-lucide="check-square" className="stroke-1.5 mr-1 h-4 w-4"></i>
+                                                        View
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Consumption Table Pagination Controls */}
                         {totalConsumptionPages > 1 && (
                             <div className="intro-y mt-3 flex flex-wrap items-center sm:flex-row sm:flex-nowrap">
                                 <nav className="w-full sm:mr-auto sm:w-auto">
-                                    <ul className="flex w-full mr-0 sm:mr-auto sm:w-auto gap-2">
+                                    <ul className="flex w-full gap-2">
                                         <li>
                                             <button
                                                 onClick={() => handleConsumptionPageChange(1)}
                                                 disabled={consumptionCurrentPage === 1}
-                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                                className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                             >
                                                 First
                                             </button>
@@ -514,7 +516,7 @@ const Dashboard = () => {
                                             <button
                                                 onClick={() => handleConsumptionPageChange(consumptionCurrentPage - 1)}
                                                 disabled={consumptionCurrentPage === 1}
-                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                                className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                             >
                                                 <ChevronLeft className="stroke-1.5 h-4 w-4" />
                                             </button>
@@ -528,7 +530,7 @@ const Dashboard = () => {
                                             <button
                                                 onClick={() => handleConsumptionPageChange(consumptionCurrentPage + 1)}
                                                 disabled={consumptionCurrentPage === totalConsumptionPages}
-                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                                className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                             >
                                                 <ChevronRight className="stroke-1.5 h-4 w-4" />
                                             </button>
@@ -537,7 +539,7 @@ const Dashboard = () => {
                                             <button
                                                 onClick={() => handleConsumptionPageChange(totalConsumptionPages)}
                                                 disabled={consumptionCurrentPage === totalConsumptionPages}
-                                                className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                                className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                             >
                                                 Last
                                             </button>
@@ -550,7 +552,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/**<div className="col-span-12 2xl:col-span-3">
+            <div className="col-span-12 2xl:col-span-3">
                 <div className="-mb-10 pb-10 2xl:border-l">
                     <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
                         <div className="col-span-12 mt-3 md:col-span-6 xl:col-span-4 2xl:col-span-12 2xl:mt-8">
@@ -591,7 +593,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-            </div>**/}
+            </div>
         </div>
     );
 };
