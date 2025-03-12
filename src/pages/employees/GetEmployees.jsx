@@ -30,7 +30,7 @@ const GetEmployees = () => {
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1)
-    const pageSize = 10
+    const pageSize = 8
 
     useEffect(() => {
         const getAllEmployees = async () => {

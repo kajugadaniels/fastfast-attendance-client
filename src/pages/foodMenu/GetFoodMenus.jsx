@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchFoodMenus, deleteFoodMenu } from '../../api';
 import { toast } from 'react-toastify';
-import { Trash2, Eye, CheckSquare, Plus } from 'lucide-react';
+import { Trash2, Eye, CheckSquare, Plus, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const GetFoodMenus = () => {
@@ -9,6 +9,10 @@ const GetFoodMenus = () => {
     const [foodMenus, setFoodMenus] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Pagination state with a limit of 8 items per page
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 8;
 
     useEffect(() => {
         const getFoodMenuList = async () => {
@@ -44,6 +48,18 @@ const GetFoodMenus = () => {
         }
     };
 
+    // Pagination Logic
+    const totalRecords = foodMenus.length;
+    const totalPages = Math.ceil(totalRecords / pageSize);
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedFoodMenus = foodMenus.slice(startIndex, startIndex + pageSize);
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
     return (
         <>
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
@@ -72,85 +88,135 @@ const GetFoodMenus = () => {
                         </p>
                     </div>
                 ) : (
-                    <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible">
-                        <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
-                            <thead>
-                                <tr>
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
-                                        <input
-                                            type="checkbox"
-                                            className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded focus:ring-4 focus:ring-offset-0 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50"
-                                        />
-                                    </th>
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
-                                        Name
-                                    </th>
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
-                                        Price
-                                    </th>
-                                    <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
-                                        Action
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {foodMenus.map((menu) => (
-                                    <tr key={menu.id} className="intro-x">
-                                        <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                    <>
+                        <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible">
+                            <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
+                                <thead>
+                                    <tr>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
                                             <input
                                                 type="checkbox"
-                                                className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded focus:ring-4 focus:ring-offset-0 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50"
+                                                className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50"
                                             />
-                                        </td>
-                                        <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <div className="flex items-center">
-                                                <div className="image-fit zoom-in h-9 w-9">
-                                                    <img
-                                                        src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
-                                                        className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
-                                                        alt="menu avatar"
-                                                    />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <span className="whitespace-nowrap font-medium">
-                                                        {menu.name}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            {menu.price} RWF
-                                        </td>
-                                        <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
-                                            <div className="flex items-center justify-center">
-                                                <button
-                                                    className="mr-3 flex items-center text-blue-600"
-                                                    onClick={() => handleShowFoodMenu(menu.id)}
-                                                >
-                                                    <Eye className="stroke-1.5 mr-1 h-4 w-4" />
-                                                    View
-                                                </button>
-                                                <button
-                                                    className="mr-3 flex items-center text-green-600"
-                                                    onClick={() => handleEditFoodMenu(menu.id)}
-                                                >
-                                                    <CheckSquare className="stroke-1.5 mr-1 h-4 w-4" />
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="flex items-center text-danger"
-                                                    onClick={() => handleDeleteFoodMenu(menu.id)}
-                                                >
-                                                    <Trash2 className="stroke-1.5 mr-1 h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0">
+                                            Name
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
+                                            Price
+                                        </th>
+                                        <th className="font-medium px-5 py-3 dark:border-300 whitespace-nowrap border-b-0 text-center">
+                                            Action
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {paginatedFoodMenus.map((menu) => (
+                                        <tr key={menu.id} className="intro-x">
+                                            <td className="px-5 py-3 border-b dark:border-300 box w-10 whitespace-nowrap border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                <input
+                                                    type="checkbox"
+                                                    className="transition-all duration-200 ease-in-out shadow-sm border-slate-200 cursor-pointer rounded focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:bg-800 dark:border-transparent dark:focus:ring-slate-700 dark:focus:ring-opacity-50"
+                                                />
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 !py-3.5 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                <div className="flex items-center">
+                                                    <div className="image-fit zoom-in h-9 w-9">
+                                                        <img
+                                                            src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
+                                                            className="tooltip cursor-pointer rounded-lg border-white shadow-[0px_0px_0px_2px_#fff,_1px_1px_5px_rgba(0,0,0,0.32)]"
+                                                            alt="menu avatar"
+                                                        />
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <span className="whitespace-nowrap font-medium">
+                                                            {menu.name}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-300 box whitespace-nowrap border-x-0 text-center shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                {menu.price} RWF
+                                            </td>
+                                            <td className="px-5 py-3 border-b dark:border-300 box w-56 border-x-0 shadow-[5px_3px_5px_#00000005] dark:bg-600">
+                                                <div className="flex items-center justify-center">
+                                                    <button
+                                                        className="mr-3 flex items-center text-blue-600"
+                                                        onClick={() => handleShowFoodMenu(menu.id)}
+                                                    >
+                                                        <Eye className="stroke-1.5 mr-1 h-4 w-4" />
+                                                        View
+                                                    </button>
+                                                    <button
+                                                        className="mr-3 flex items-center text-green-600"
+                                                        onClick={() => handleEditFoodMenu(menu.id)}
+                                                    >
+                                                        <CheckSquare className="stroke-1.5 mr-1 h-4 w-4" />
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        className="flex items-center text-danger"
+                                                        onClick={() => handleDeleteFoodMenu(menu.id)}
+                                                    >
+                                                        <Trash2 className="stroke-1.5 mr-1 h-4 w-4" />
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Pagination Controls */}
+                        <div className="intro-y col-span-12 flex flex-wrap items-center sm:flex-row sm:flex-nowrap mt-4">
+                            <nav className="w-full sm:mr-auto sm:w-auto">
+                                <ul className="flex w-full mr-0 sm:mr-auto sm:w-auto gap-2">
+                                    <li>
+                                        <button
+                                            onClick={() => handlePageChange(1)}
+                                            disabled={currentPage === 1}
+                                            className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        >
+                                            First
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        >
+                                            <ChevronLeft className="stroke-1.5 h-4 w-4" />
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <span className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                                            Page {currentPage} of {totalPages}
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        >
+                                            <ChevronRight className="stroke-1.5 h-4 w-4" />
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => handlePageChange(totalPages)}
+                                            disabled={currentPage === totalPages}
+                                            className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        >
+                                            <ChevronsRight className="stroke-1.5 h-4 w-4" />
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </>
                 )}
             </div>
         </>
