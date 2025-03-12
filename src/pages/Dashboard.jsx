@@ -106,7 +106,7 @@ const Dashboard = () => {
     // --------------------------------------------
     // Group Employees by Position
     // --------------------------------------------
-    const positions = ['Umufundi', 'Umuyede', 'Umwubatsi', 'Staff'];
+    const positions = ['Casual', 'Staff'];
     const employeesByPosition = positions.reduce((acc, pos) => {
         acc[pos] = employees.filter((emp) => emp.position === pos);
         return acc;

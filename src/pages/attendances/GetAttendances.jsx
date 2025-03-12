@@ -424,9 +424,7 @@ const GetAttendances = () => {
                     >
                         <option value="">All Positions</option>
                         <option value="Staff">Staff</option>
-                        <option value="Umwubatsi">Umwubatsi</option>
-                        <option value="Umufundi">Umufundi</option>
-                        <option value="Umuyede">Umuyede</option>
+                        <option value="Casual">Casual</option>
                     </select>
 
                     {/* Date Range Filters */}
