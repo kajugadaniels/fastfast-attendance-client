@@ -22,10 +22,9 @@ const GetAttendances = () => {
     const currentDate = new Date().toISOString().split('T')[0]
     // Filters & search
     const [searchTerm, setSearchTerm] = useState('')
-    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent" filter for today's record
+    const [attendanceFilter, setAttendanceFilter] = useState('') // "Present" or "Absent"
     const [genderFilter, setGenderFilter] = useState('')
     const [positionFilter, setPositionFilter] = useState('')
-    // Set default from and to dates to the current date
     const [startDate, setStartDate] = useState(currentDate)
     const [endDate, setEndDate] = useState(currentDate)
     const [foodMenuFilter, setFoodMenuFilter] = useState('')
@@ -33,7 +32,7 @@ const GetAttendances = () => {
     // Retrieve food menus for filtering options
     const [foodMenus, setFoodMenus] = useState([])
 
-    // Pagination
+    // Pagination state
     const [currentPage, setCurrentPage] = useState(1)
     const pageSize = 10
 
@@ -45,13 +44,12 @@ const GetAttendances = () => {
         return d
     })
 
-    // Modal state (if needed for other actions)
+    // Modal state (if needed)
     const [isModalOpen, setIsModalOpen] = useState(false)
-
-    // Ref for the attendance table container (for PDF download if needed)
+    // Ref for the attendance table container (for PDF download)
     const attendanceRef = useRef()
 
-    // Fetch attendance records (complete history)
+    // Fetch attendance records
     useEffect(() => {
         const fetchAttendance = async () => {
             try {
@@ -74,7 +72,7 @@ const GetAttendances = () => {
         fetchAttendance()
     }, [])
 
-    // Fetch food menus for filtering
+    // Fetch food menus for filtering options
     useEffect(() => {
         const fetchFoodMenusData = async () => {
             try {
@@ -98,7 +96,7 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  Filtering & Search
+    // Filtering & Search Logic
     // --------------------------------------
     const filteredData = attendanceData.filter(emp => {
         // Filter by search term (name or phone)
@@ -106,7 +104,7 @@ const GetAttendances = () => {
             emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp.phone.toLowerCase().includes(searchTerm.toLowerCase())
 
-        // Compute today's attendance status from attendance_history
+        // Determine today's attendance status from history
         const todayStr = new Date().toISOString().split('T')[0]
         const todayRecord =
             (emp.attendance_history || []).find(hist => hist.attendance_date === todayStr) || {}
@@ -126,7 +124,7 @@ const GetAttendances = () => {
             ? (emp.position || '').toLowerCase() === positionFilter.toLowerCase()
             : true
 
-        // Filter by date range: Check if any attendance_history record exists within the range.
+        // Filter by date range: Check if any attendance record exists within the range.
         let matchesDateRange = true
         if (startDate) {
             const start = new Date(startDate)
@@ -144,7 +142,7 @@ const GetAttendances = () => {
             if (!hasRecord) matchesDateRange = false
         }
 
-        // Filter by food menu: Check if any attendance record has a food_menu with the given name.
+        // Filter by food menu: Check if any attendance record has a food_menu matching the filter.
         let matchesFoodMenu = true
         if (foodMenuFilter) {
             const history = emp.attendance_history || []
@@ -168,7 +166,7 @@ const GetAttendances = () => {
     })
 
     // --------------------------------------
-    //  Pagination
+    // Pagination Logic
     // --------------------------------------
     const totalRecords = filteredData.length
     const totalPages = Math.ceil(totalRecords / pageSize)
@@ -187,15 +185,14 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  Helper: Format Date
+    // Helper: Format Date
     // --------------------------------------
     const formatDate = dateObj => {
         return dateObj.toISOString().split('T')[0] // "YYYY-MM-DD"
     }
 
     // --------------------------------------
-    //  Determine attendance for a given day by looking up the history.
-    //  Returns an object: { status, time } for that day.
+    // Determine Attendance Status for a Given Day
     // --------------------------------------
     const getDayStatus = (emp, dayIndex) => {
         const thatDay = daysArray[dayIndex]
@@ -216,14 +213,13 @@ const GetAttendances = () => {
     }
 
     // --------------------------------------
-    //  Professional PDF Download Functionality
+    // Professional PDF Download Functionality
     // --------------------------------------
     const downloadAttendancePDF = () => {
         // Flatten the attendance records from the filtered data,
-        // including only records that fall within the selected date range
+        // including only records that fall within the selected date range and have "Present" status.
         const reportRows = []
         filteredData.forEach(emp => {
-            // Filter attendance records for this employee based on the date range
             const recordsInRange = (emp.attendance_history || []).filter(record => {
                 if (startDate && endDate) {
                     const recordDate = new Date(record.attendance_date)
@@ -234,7 +230,6 @@ const GetAttendances = () => {
                 }
                 return true
             })
-            // For a professional report, include only "Present" records
             recordsInRange.forEach(record => {
                 if (record.attendance_status === "Present") {
                     reportRows.push({
@@ -254,7 +249,7 @@ const GetAttendances = () => {
             })
         })
 
-        // Compute summary information:
+        // Compute summary information
         const uniqueEmployees = new Set(reportRows.map(row => row.employeeName))
         const totalEmployeesAttended = uniqueEmployees.size
         const totalAmountConsumed = reportRows
@@ -289,6 +284,23 @@ const GetAttendances = () => {
         doc.setFont('helvetica', 'normal')
         doc.text(`Report Date Range: ${startDate} to ${endDate}`, margin, y)
         y += 6
+        // Include additional filter details if applied:
+        if (attendanceFilter) {
+            doc.text(`Attendance Filter: ${attendanceFilter}`, margin, y)
+            y += 6
+        }
+        if (genderFilter) {
+            doc.text(`Gender Filter: ${genderFilter}`, margin, y)
+            y += 6
+        }
+        if (positionFilter) {
+            doc.text(`Position Filter: ${positionFilter}`, margin, y)
+            y += 6
+        }
+        if (foodMenuFilter) {
+            doc.text(`Food Menu Filter: ${foodMenuFilter}`, margin, y)
+            y += 6
+        }
         doc.text(`Total Employees Attended: ${totalEmployeesAttended}`, margin, y)
         y += 6
         doc.text(`Total Amount Consumed: ${totalAmountConsumed} RWF`, margin, y)
@@ -309,7 +321,7 @@ const GetAttendances = () => {
         doc.setFont('helvetica', 'normal')
 
         // Table Rows
-        reportRows.forEach((row, index) => {
+        reportRows.forEach(row => {
             doc.text(row.employeeName, col1X, y)
             doc.text(row.foodMenu, col2X, y)
             doc.text(`${row.price}`, col3X, y)
@@ -352,7 +364,7 @@ const GetAttendances = () => {
                 {/* Today Attendance Button */}
                 <button
                     onClick={handleTodayAttendance}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 rounded-full mb-2 mr-1"
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-dark border-dark text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 rounded-full mb-2 mr-1"
                 >
                     Today Attendance
                 </button>
@@ -360,7 +372,7 @@ const GetAttendances = () => {
                 {/* Button to download Attendance PDF */}
                 <button
                     onClick={downloadAttendancePDF}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 focus-visible:outline-none dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-pending border-pending text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 rounded-full mb-2 mr-1"
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-4 rounded-full font-medium cursor-pointer focus:ring-4 focus:ring-primary focus:ring-opacity-20 dark:focus:ring-slate-700 dark:focus:ring-opacity-50 bg-pending border-pending text-white dark:bg-darkmode-800 dark:border-transparent dark:text-slate-300 rounded-full mb-2 mr-1"
                 >
                     Download Attendance PDF
                 </button>
@@ -564,16 +576,16 @@ const GetAttendances = () => {
                     </table>
                 </div>
 
-                {/* Pagination area */}
+                {/* Pagination Controls */}
                 {filteredData.length > 0 && (
                     <div className="intro-y col-span-12 flex flex-wrap items-center sm:flex-row sm:flex-nowrap mt-4">
                         <nav className="w-full sm:mr-auto sm:w-auto">
-                            <ul className="flex w-full mr-0 sm:mr-auto sm:w-auto gap-2">
+                            <ul className="flex w-full gap-2">
                                 <li>
                                     <button
                                         onClick={() => handlePageChange(1)}
                                         disabled={currentPage === 1}
-                                        className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                     >
                                         First
                                     </button>
@@ -582,7 +594,7 @@ const GetAttendances = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
-                                        className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                     >
                                         <ChevronLeft className="stroke-1.5 h-4 w-4" />
                                     </button>
@@ -596,7 +608,7 @@ const GetAttendances = () => {
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === totalPages}
-                                        className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                     >
                                         <ChevronRight className="stroke-1.5 h-4 w-4" />
                                     </button>
@@ -605,7 +617,7 @@ const GetAttendances = () => {
                                     <button
                                         onClick={() => handlePageChange(totalPages)}
                                         disabled={currentPage === totalPages}
-                                        className="transition duration-200 border items-center justify-center py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
+                                        className="transition duration-200 border py-2 px-2 rounded-md cursor-pointer focus:ring-4 focus:ring-primary text-slate-800 dark:text-slate-300 border-transparent disabled:opacity-50"
                                     >
                                         <ChevronsRight className="stroke-1.5 h-4 w-4" />
                                     </button>
@@ -614,6 +626,16 @@ const GetAttendances = () => {
                         </nav>
                     </div>
                 )}
+            </div>
+
+            {/* Professional PDF Download Button */}
+            <div className="flex justify-end gap-4 mt-6">
+                <button
+                    onClick={downloadAttendancePDF}
+                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-success focus:ring-opacity-20 bg-success border-success text-white"
+                >
+                    Download Attendance PDF
+                </button>
             </div>
         </>
     )
