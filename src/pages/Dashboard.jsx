@@ -11,6 +11,8 @@ import {
     UserSquare,
     ChevronLeft,
     ChevronRight,
+    UserCog,
+    BookUser,
 } from 'lucide-react';
 import {
     Chart as ChartJS,
@@ -106,15 +108,6 @@ const Dashboard = () => {
     }, {});
 
     const totalAttendedToday = todayAttendanceRecords.length;
-
-    // --------------------------------------------
-    // Group Employees by Position
-    // --------------------------------------------
-    const positions = ['Casual', 'Staff'];
-    const employeesByPosition = positions.reduce((acc, pos) => {
-        acc[pos] = employees.filter((emp) => emp.position === pos);
-        return acc;
-    }, {});
 
     // --------------------------------------------
     // Total Number of All Food Menus
@@ -236,7 +229,6 @@ const Dashboard = () => {
     // --------------------------------------------
     // Food Menu Consumption for Filtered Date Range
     // --------------------------------------------
-    // Filter attendance records based on consumptionStartDate and consumptionEndDate
     const consumptionAttendanceRecords = [];
     attendanceData.forEach((emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
@@ -263,7 +255,6 @@ const Dashboard = () => {
         }
         return acc;
     }, {});
-
     // Build consumption table data by looping through ALL food menus
     const consumptionTableData = foodMenus.map((menu) => {
         const summary = foodMenuConsumptionSummary[menu.name] || { count: 0, price: menu.price };
@@ -290,6 +281,38 @@ const Dashboard = () => {
         }
     };
 
+    // --------------------------------------------
+    // Compute Total Food Consumption by Position for Today
+    // --------------------------------------------
+    const consumptionByPosition = attendanceData.reduce(
+        (acc, att) => {
+            if (att.attendance_history && att.attendance_history.length > 0) {
+                att.attendance_history.forEach((record) => {
+                    if (
+                        record.attendance_date === currentDate &&
+                        record.attendance_status === 'Present' &&
+                        record.food_menu &&
+                        record.food_menu.length > 0
+                    ) {
+                        // Determine the employee's position by matching with employees data
+                        const empId = att.employee_id || att.id;
+                        const employee = employees.find((emp) => emp.id === empId);
+                        if (employee && employee.position) {
+                            const price = parseFloat(record.food_menu[0].price);
+                            if (employee.position === 'Staff') {
+                                acc.staff += price;
+                            } else if (employee.position === 'Casual') {
+                                acc.casual += price;
+                            }
+                        }
+                    }
+                });
+            }
+            return acc;
+        },
+        { staff: 0, casual: 0 }
+    );
+
     if (loading) {
         return <div className="text-center py-10">Loading dashboard...</div>;
     }
@@ -299,9 +322,10 @@ const Dashboard = () => {
 
     return (
         <div className="grid grid-cols-12 gap-6">
-            {/* Dashboard Summary Cards and Graphs */}
+            {/* Main Dashboard Content */}
             <div className="col-span-12 2xl:col-span-9">
                 <div className="grid grid-cols-12 gap-6">
+                    {/* Summary Cards */}
                     <div className="col-span-12 mt-8">
                         <div className="intro-y flex h-10 items-center">
                             <h2 className="mr-5 truncate text-lg font-medium">Dashboard</h2>
@@ -311,7 +335,7 @@ const Dashboard = () => {
                             </Link>
                         </div>
                         <div className="mt-5 grid grid-cols-12 gap-6">
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -322,7 +346,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -333,7 +357,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -344,7 +368,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-3">
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
                                     <div className="box p-5">
                                         <div className="flex">
@@ -354,6 +378,36 @@ const Dashboard = () => {
                                             {consumptionTableData.reduce((sum, item) => sum + parseFloat(item.totalAmount), 0).toFixed(2)} RWF
                                         </div>
                                         <div className="mt-1 text-base text-slate-500">Total Consumption Amount</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
+                                    <div className="box p-5">
+                                        <div className="flex">
+                                            <UserCog className="stroke-1.5 h-[28px] w-[28px] text-dark" />
+                                        </div>
+                                        <div className="mt-6 text-3xl font-medium leading-8">
+                                            {consumptionByPosition.staff.toFixed(2)} RWF
+                                        </div>
+                                        <div className="mt-1 text-base text-slate-500">
+                                            Total Food Consumption (Staff) Today
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
+                                    <div className="box p-5">
+                                        <div className="flex">
+                                            <BookUser className="stroke-1.5 h-[28px] w-[28px] text-danger" />
+                                        </div>
+                                        <div className="mt-6 text-3xl font-medium leading-8">
+                                            {consumptionByPosition.casual.toFixed(2)} RWF
+                                        </div>
+                                        <div className="mt-1 text-base text-slate-500">
+                                            Total Food Consumption (Casual) Today
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -552,6 +606,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            {/* Sidebar: Latest 5 Attended Employees */}
             <div className="col-span-12 2xl:col-span-3">
                 <div className="-mb-10 pb-10 2xl:border-l">
                     <div className="grid grid-cols-12 gap-x-6 gap-y-6 2xl:gap-x-0 2xl:pl-6">
