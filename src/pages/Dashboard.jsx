@@ -41,7 +41,7 @@ const Dashboard = () => {
 
     // Consumption table pagination state
     const [consumptionCurrentPage, setConsumptionCurrentPage] = useState(1);
-    const consumptionPageSize = 10;
+    const consumptionPageSize = 5;
 
     // Fetch employees, attendance data, and food menus on component mount
     useEffect(() => {

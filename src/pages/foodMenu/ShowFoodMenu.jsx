@@ -212,7 +212,7 @@ const ShowFoodMenu = () => {
                 </div>
 
                 {/* Employees with Attendance History */}
-                <div className="col-span-12 lg:col-span-7 2xl:col-span-9">
+                <div className="col-span-12 lg:col-span-9 2xl:col-span-9">
                     <div className="box rounded-md p-5">
                         {/* Filter Bar */}
                         <div className="mb-5 flex flex-col sm:flex-row items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
