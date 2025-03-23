@@ -265,10 +265,11 @@ const ShowEmployee = () => {
             {/* Employee Info */}
             <div className="grid grid-cols-12 gap-6 mt-6">
                 <div className="col-span-12 lg:col-span-4 box p-5">
-                    <div className="mb-5 flex justify-between items-center border-b pb-5">
-                        <span className="text-base font-medium">Employee Info</span>
-                        <button onClick={() => navigate(`/employee/${id}/edit`)} className="text-primary hover:underline">
-                            <Edit className="mr-2" /> Edit Employee
+                    <div className="mb-5 flex items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
+                        <div className="truncate text-base font-medium">Employee Info</div>
+                        <button onClick={() => navigate(`/employee/${id}/edit`)} className="ml-auto flex items-center text-primary" href="">
+                            <Edit className="stroke-1.5 mr-2 h-4 w-4" />
+                            Edit Employee
                         </button>
                     </div>
                     <div className="space-y-3">
