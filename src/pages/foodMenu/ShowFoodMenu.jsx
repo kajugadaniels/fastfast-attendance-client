@@ -106,14 +106,14 @@ const ShowFoodMenu = () => {
         // Company Header
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(16)
-        doc.text("Your Company Name", margin, y)
+        doc.text("FAST FAST FOOD", margin, y)
         y += 7
-        doc.setFontSize(10)
-        doc.setFont('helvetica', 'normal')
-        doc.text("Address: 1234 Company Address, City, Country", margin, y)
-        y += 5
-        doc.text("Contact: +1234567890 | Email: info@company.com", margin, y)
-        y += 10
+        // doc.setFontSize(10)
+        // doc.setFont('helvetica', 'normal')
+        // doc.text("Address: 1234 Company Address, City, Country", margin, y)
+        // y += 5
+        // doc.text("Contact: +1234567890 | Email: info@company.com", margin, y)
+        // y += 10
 
         // Report Title & Filter Summary
         doc.setFontSize(14)
