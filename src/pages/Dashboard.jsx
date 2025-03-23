@@ -113,6 +113,41 @@ const Dashboard = () => {
     // --------------------------------------------
     const totalFoodMenus = foodMenus.length;
 
+    const consumptionByPosition = attendanceData.reduce(
+        (acc, att) => {
+            if (att.attendance_history && att.attendance_history.length > 0) {
+                att.attendance_history.forEach((record) => {
+                    const recordDate = new Date(record.attendance_date);
+                    const startDate = new Date(consumptionStartDate);
+                    const endDate = new Date(consumptionEndDate);
+                    endDate.setHours(23, 59, 59, 999); // End of the day on the end date
+    
+                    if (
+                        record.attendance_status === 'Present' &&
+                        recordDate >= startDate &&
+                        recordDate <= endDate &&
+                        record.food_menu &&
+                        record.food_menu.length > 0
+                    ) {
+                        // Determine the employee's position
+                        const empId = att.employee_id || att.id;
+                        const employee = employees.find((emp) => emp.id === empId);
+                        if (employee && employee.position) {
+                            const price = parseFloat(record.food_menu[0].price);
+                            if (employee.position === 'Staff') {
+                                acc.staff += price;
+                            } else if (employee.position === 'Casual') {
+                                acc.casual += price;
+                            }
+                        }
+                    }
+                });
+            }
+            return acc;
+        },
+        { staff: 0, casual: 0 }
+    );    
+
     // --------------------------------------------
     // Graph 1: Monthly Attendance Trend (Filtered by Date Range)
     // --------------------------------------------
@@ -373,6 +408,42 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
+                                    <div className="box p-5">
+                                        <div className="flex">
+                                            <UserCog className="stroke-1.5 h-[28px] w-[28px] text-dark" />
+                                        </div>
+                                        <div className="mt-6 text-3xl font-medium leading-8">
+                                            {/* Calculate total food consumption for staff based on the date range */}
+                                            {consumptionByPosition.staff
+                                                .toFixed(2)} RWF
+                                        </div>
+                                        <div className="mt-1 text-base text-slate-500">
+                                            Total Food Consumption (Staff) in Selected Date Range
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
+                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
+                                    <div className="box p-5">
+                                        <div className="flex">
+                                            <BookUser className="stroke-1.5 h-[28px] w-[28px] text-danger" />
+                                        </div>
+                                        <div className="mt-6 text-3xl font-medium leading-8">
+                                            {/* Calculate total food consumption for casual based on the date range */}
+                                            {consumptionByPosition.casual
+                                                .toFixed(2)} RWF
+                                        </div>
+                                        <div className="mt-1 text-base text-slate-500">
+                                            Total Food Consumption (Casual) in Selected Date Range
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
