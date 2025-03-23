@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchFoodMenu } from '../../api'
-import { Eye, ChevronLeft } from 'lucide-react'
+import { Eye, ChevronLeft, Edit } from 'lucide-react'
 import { jsPDF } from 'jspdf'
 
 const ShowFoodMenu = () => {
@@ -192,8 +192,14 @@ const ShowFoodMenu = () => {
             {/* Food Menu Info */}
             <div className="grid grid-cols-12 gap-6 mt-6">
                 <div className="col-span-12 lg:col-span-3 box p-5">
-                    <div className="mb-5 border-b pb-5">
-                        <span className="text-base font-medium">Food Menu Info</span>
+                    <div className="mb-5 flex items-center border-b border-slate-200/60 pb-5 dark:border-darkmode-400">
+                        <div className="truncate text-base font-medium">Food Menu Info</div>
+                        {/*
+                        <button onClick={() => navigate(`/food-menu/${id}/edit`)} className="ml-auto flex items-center text-primary">
+                            <Edit className="stroke-1.5 mr-2 h-4 w-4" />
+                            Edit Food Price
+                        </button>
+                        */}
                     </div>
                     <div className="space-y-3">
                         <div className="flex justify-between">
