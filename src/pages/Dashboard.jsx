@@ -78,25 +78,24 @@ const Dashboard = () => {
     }, []);
 
     // --------------------------------------------
-    // Attendance Summary for Today (by Food Menu)
+    // Attendance Summary for Selected Date Range (by Food Menu)
     // --------------------------------------------
-    const todayAttendanceRecords = attendanceData.reduce((acc, emp) => {
+    const filteredAttendanceRecords = attendanceData.reduce((acc, emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
-            const todayRecord = emp.attendance_history.find(
+            const filteredRecords = emp.attendance_history.filter(
                 (record) =>
-                    record.attendance_date === currentDate &&
+                    record.attendance_date >= consumptionStartDate &&
+                    record.attendance_date <= consumptionEndDate &&
                     record.attendance_status === 'Present' &&
                     record.food_menu &&
                     record.food_menu.length > 0
             );
-            if (todayRecord) {
-                acc.push(todayRecord);
-            }
+            acc.push(...filteredRecords);
         }
         return acc;
     }, []);
 
-    const foodMenuSummary = todayAttendanceRecords.reduce((acc, record) => {
+    const foodMenuSummary = filteredAttendanceRecords.reduce((acc, record) => {
         const menu = record.food_menu[0]; // Assuming one food menu per attendance record
         const menuName = menu.name;
         if (acc[menuName]) {
@@ -107,7 +106,7 @@ const Dashboard = () => {
         return acc;
     }, {});
 
-    const totalAttendedToday = todayAttendanceRecords.length;
+    const totalAttendedInDateRange = filteredAttendanceRecords.length;
 
     // --------------------------------------------
     // Total Number of All Food Menus
@@ -115,19 +114,16 @@ const Dashboard = () => {
     const totalFoodMenus = foodMenus.length;
 
     // --------------------------------------------
-    // Graph 1: Monthly Attendance Trend
+    // Graph 1: Monthly Attendance Trend (Filtered by Date Range)
     // --------------------------------------------
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
     const monthlyAttendance = {};
     attendanceData.forEach((emp) => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
             emp.attendance_history.forEach((record) => {
                 const recordDate = new Date(record.attendance_date);
                 if (
-                    recordDate.getMonth() === currentMonth &&
-                    recordDate.getFullYear() === currentYear &&
+                    recordDate >= new Date(consumptionStartDate) &&
+                    recordDate <= new Date(consumptionEndDate) &&
                     record.attendance_status === 'Present'
                 ) {
                     const dayStr = record.attendance_date;
@@ -139,14 +135,10 @@ const Dashboard = () => {
             });
         }
     });
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const attendanceLabels = [];
-    const attendanceCounts = [];
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        attendanceLabels.push(dayStr);
-        attendanceCounts.push(monthlyAttendance[dayStr] || 0);
-    }
+
+    const attendanceLabels = Object.keys(monthlyAttendance);
+    const attendanceCounts = Object.values(monthlyAttendance);
+
     const monthlyAttendanceData = {
         labels: attendanceLabels,
         datasets: [
@@ -169,7 +161,8 @@ const Dashboard = () => {
         if (emp.attendance_history && emp.attendance_history.length > 0) {
             emp.attendance_history.forEach((record) => {
                 if (
-                    record.attendance_date === currentDate &&
+                    record.attendance_date >= consumptionStartDate &&
+                    record.attendance_date <= consumptionEndDate &&
                     record.attendance_status === 'Present' &&
                     record.food_menu &&
                     record.food_menu.length > 0
@@ -183,12 +176,14 @@ const Dashboard = () => {
             });
         }
     });
+
     const foodMenuEmployeeCounts = {};
     Object.keys(foodMenuEmployeeAssignment).forEach((menuName) => {
         foodMenuEmployeeCounts[menuName] = foodMenuEmployeeAssignment[menuName].size;
     });
     const foodMenuGraphLabels = Object.keys(foodMenuEmployeeCounts);
     const foodMenuGraphData = Object.values(foodMenuEmployeeCounts);
+
     const foodMenuChartData = {
         labels: foodMenuGraphLabels,
         datasets: [
@@ -199,32 +194,6 @@ const Dashboard = () => {
             },
         ],
     };
-
-    // --------------------------------------------
-    // Latest 5 Attended Employees
-    // --------------------------------------------
-    const latestAttendanceRecords = [];
-    attendanceData.forEach((emp) => {
-        if (emp.attendance_history && emp.attendance_history.length > 0) {
-            emp.attendance_history.forEach((record) => {
-                if (
-                    record.attendance_status === 'Present' &&
-                    record.food_menu &&
-                    record.food_menu.length > 0
-                ) {
-                    latestAttendanceRecords.push({
-                        name: emp.name,
-                        attendance_date: record.attendance_date,
-                        price: record.food_menu[0].price,
-                    });
-                }
-            });
-        }
-    });
-    latestAttendanceRecords.sort(
-        (a, b) => new Date(b.attendance_date) - new Date(a.attendance_date)
-    );
-    const latest5Records = latestAttendanceRecords.slice(0, 5);
 
     // --------------------------------------------
     // Food Menu Consumption for Filtered Date Range
@@ -245,6 +214,7 @@ const Dashboard = () => {
             });
         }
     });
+
     const foodMenuConsumptionSummary = consumptionAttendanceRecords.reduce((acc, record) => {
         const menu = record.food_menu[0];
         const menuName = menu.name;
@@ -255,6 +225,7 @@ const Dashboard = () => {
         }
         return acc;
     }, {});
+
     // Build consumption table data by looping through ALL food menus
     const consumptionTableData = foodMenus.map((menu) => {
         const summary = foodMenuConsumptionSummary[menu.name] || { count: 0, price: menu.price };
@@ -267,7 +238,7 @@ const Dashboard = () => {
         };
     });
 
-    // --------------- Pagination for Food Menu Consumption ---------------
+    // Pagination for Food Menu Consumption
     const totalConsumptionRecords = consumptionTableData.length;
     const totalConsumptionPages = Math.ceil(totalConsumptionRecords / consumptionPageSize);
     const consumptionPaginatedData = consumptionTableData.slice(
@@ -280,38 +251,6 @@ const Dashboard = () => {
             setConsumptionCurrentPage(page);
         }
     };
-
-    // --------------------------------------------
-    // Compute Total Food Consumption by Position for Today
-    // --------------------------------------------
-    const consumptionByPosition = attendanceData.reduce(
-        (acc, att) => {
-            if (att.attendance_history && att.attendance_history.length > 0) {
-                att.attendance_history.forEach((record) => {
-                    if (
-                        record.attendance_date === currentDate &&
-                        record.attendance_status === 'Present' &&
-                        record.food_menu &&
-                        record.food_menu.length > 0
-                    ) {
-                        // Determine the employee's position by matching with employees data
-                        const empId = att.employee_id || att.id;
-                        const employee = employees.find((emp) => emp.id === empId);
-                        if (employee && employee.position) {
-                            const price = parseFloat(record.food_menu[0].price);
-                            if (employee.position === 'Staff') {
-                                acc.staff += price;
-                            } else if (employee.position === 'Casual') {
-                                acc.casual += price;
-                            }
-                        }
-                    }
-                });
-            }
-            return acc;
-        },
-        { staff: 0, casual: 0 }
-    );
 
     if (loading) {
         return <div className="text-center py-10">Loading dashboard...</div>;
@@ -341,8 +280,8 @@ const Dashboard = () => {
                                         <div className="flex">
                                             <UserCheck className="stroke-1.5 h-[28px] w-[28px] text-primary" />
                                         </div>
-                                        <div className="mt-6 text-3xl font-medium leading-8">{totalAttendedToday}</div>
-                                        <div className="mt-1 text-base text-slate-500">Total Attendance Today</div>
+                                        <div className="mt-6 text-3xl font-medium leading-8">{totalAttendedInDateRange}</div>
+                                        <div className="mt-1 text-base text-slate-500">Total Attendance in Selected Date Range</div>
                                     </div>
                                 </div>
                             </div>
@@ -381,34 +320,31 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
-                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
-                                    <div className="box p-5">
-                                        <div className="flex">
-                                            <UserCog className="stroke-1.5 h-[28px] w-[28px] text-dark" />
-                                        </div>
-                                        <div className="mt-6 text-3xl font-medium leading-8">
-                                            {consumptionByPosition.staff.toFixed(2)} RWF
-                                        </div>
-                                        <div className="mt-1 text-base text-slate-500">
-                                            Total Food Consumption (Staff) Today
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
-                                <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
-                                    <div className="box p-5">
-                                        <div className="flex">
-                                            <BookUser className="stroke-1.5 h-[28px] w-[28px] text-danger" />
-                                        </div>
-                                        <div className="mt-6 text-3xl font-medium leading-8">
-                                            {consumptionByPosition.casual.toFixed(2)} RWF
-                                        </div>
-                                        <div className="mt-1 text-base text-slate-500">
-                                            Total Food Consumption (Casual) Today
-                                        </div>
-                                    </div>
+
+                            {/* Date Range Filter for Consumption */}
+                            <div className="col-span-12 mt-4">
+                                <div className="intro-y flex sm:flex-row sm:flex-wrap sm:items-center gap-2">
+                                    <label className="text-slate-500">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={consumptionStartDate}
+                                        onChange={(e) => {
+                                            setConsumptionStartDate(e.target.value);
+                                            setConsumptionCurrentPage(1);
+                                        }}
+                                        className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                    />
+                                    <span className="text-slate-500">to</span>
+                                    <label className="text-slate-500">End Date</label>
+                                    <input
+                                        type="date"
+                                        value={consumptionEndDate}
+                                        onChange={(e) => {
+                                            setConsumptionEndDate(e.target.value);
+                                            setConsumptionCurrentPage(1);
+                                        }}
+                                        className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -429,7 +365,7 @@ const Dashboard = () => {
                                             legend: { position: 'top' },
                                             title: {
                                                 display: true,
-                                                text: 'Daily Attendance in Current Month',
+                                                text: 'Daily Attendance in Selected Date Range',
                                             },
                                         },
                                     }}
@@ -453,7 +389,7 @@ const Dashboard = () => {
                                             legend: { position: 'top' },
                                             title: {
                                                 display: true,
-                                                text: 'Unique Employee Distribution by Food Menu (Today)',
+                                                text: 'Unique Employee Distribution by Food Menu (Filtered)',
                                             },
                                         },
                                     }}
@@ -465,38 +401,12 @@ const Dashboard = () => {
                     {/* Food Menu Consumption (Filtered) Table with Date Range Filters & Pagination */}
                     <div className="col-span-12 mt-6">
                         <div className="intro-y block h-10 items-center sm:flex">
-                            <h2 className="mr-5 truncate text-lg font-medium">
-                                Food Menu Consumption (Filtered)
-                            </h2>
-                            <div className="mt-3 flex items-center sm:ml-auto sm:mt-0">
-                                <input
-                                    type="date"
-                                    value={consumptionStartDate}
-                                    onChange={(e) => {
-                                        setConsumptionStartDate(e.target.value);
-                                        setConsumptionCurrentPage(1);
-                                    }}
-                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
-                                />
-                                <span className="text-sm text-slate-700 mx-2">To:</span>
-                                <input
-                                    type="date"
-                                    value={consumptionEndDate}
-                                    onChange={(e) => {
-                                        setConsumptionEndDate(e.target.value);
-                                        setConsumptionCurrentPage(1);
-                                    }}
-                                    className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
-                                />
-                            </div>
+                            <h2 className="mr-5 truncate text-lg font-medium">Food Menu Consumption (Filtered)</h2>
                         </div>
                         <div className="intro-y mt-8 overflow-auto sm:mt-0 lg:overflow-visible">
                             <table className="w-full text-left border-separate border-spacing-y-[10px] sm:mt-2">
                                 <thead>
                                     <tr>
-                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
-                                            Images
-                                        </th>
                                         <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0">
                                             Food Menu
                                         </th>
@@ -506,53 +416,20 @@ const Dashboard = () => {
                                         <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
                                             Total Amount (RWF)
                                         </th>
-                                        <th className="font-medium px-5 py-3 dark:border-darkmode-300 whitespace-nowrap border-b-0 text-center">
-                                            Actions
-                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {consumptionPaginatedData.map((item) => (
-                                        <tr className="intro-x" key={item.name}>
-                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 box w-40 shadow-sm">
-                                                <div className="flex">
-                                                    <div className="image-fit zoom-in h-10 w-10">
-                                                        <img
-                                                            src="https://cdn-icons-png.flaticon.com/512/5951/5951752.png"
-                                                            alt="Food Menu"
-                                                            className="tooltip cursor-pointer rounded-full"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 shadow-sm">
-                                                <a className="whitespace-nowrap font-medium" href="#">
-                                                    {item.name}
-                                                </a>
-                                                <div className="mt-0.5 whitespace-nowrap text-xs text-slate-500">
-                                                    {item.price} RWF
-                                                </div>
-                                            </td>
-                                            <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 shadow-sm">
-                                                {item.count}
-                                            </td>
-                                            <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 shadow-sm">
-                                                {item.totalAmount} RWF
-                                            </td>
-                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 shadow-sm">
-                                                <div className="flex items-center justify-center">
-                                                    <a className="mr-3 flex items-center" href="#">
-                                                        <i data-lucide="check-square" className="stroke-1.5 mr-1 h-4 w-4"></i>
-                                                        View
-                                                    </a>
-                                                </div>
-                                            </td>
+                                        <tr key={item.name} className="intro-x">
+                                            <td className="px-5 py-3 border-b dark:border-darkmode-300 box shadow-sm">{item.name}</td>
+                                            <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 shadow-sm">{item.count}</td>
+                                            <td className="px-5 py-3 text-center border-b dark:border-darkmode-300 shadow-sm">{item.totalAmount} RWF</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                        {/* Consumption Table Pagination Controls */}
+                        {/* Pagination Controls */}
                         {totalConsumptionPages > 1 && (
                             <div className="intro-y mt-3 flex flex-wrap items-center sm:flex-row sm:flex-nowrap">
                                 <nav className="w-full sm:mr-auto sm:w-auto">
