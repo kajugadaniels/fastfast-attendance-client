@@ -196,6 +196,32 @@ const Dashboard = () => {
     };
 
     // --------------------------------------------
+    // Latest 5 Attended Employees
+    // --------------------------------------------
+    const latestAttendanceRecords = [];
+    attendanceData.forEach((emp) => {
+        if (emp.attendance_history && emp.attendance_history.length > 0) {
+            emp.attendance_history.forEach((record) => {
+                if (
+                    record.attendance_status === 'Present' &&
+                    record.food_menu &&
+                    record.food_menu.length > 0
+                ) {
+                    latestAttendanceRecords.push({
+                        name: emp.name,
+                        attendance_date: record.attendance_date,
+                        price: record.food_menu[0].price,
+                    });
+                }
+            });
+        }
+    });
+    latestAttendanceRecords.sort(
+        (a, b) => new Date(b.attendance_date) - new Date(a.attendance_date)
+    );
+    const latest5Records = latestAttendanceRecords.slice(0, 5);
+
+    // --------------------------------------------
     // Food Menu Consumption for Filtered Date Range
     // --------------------------------------------
     const consumptionAttendanceRecords = [];
@@ -261,18 +287,45 @@ const Dashboard = () => {
 
     return (
         <div className="grid grid-cols-12 gap-6">
+            <div className="intro-y col-span-12 mb-0 mt-8 flex flex-wrap items-center xl:flex-nowrap">
+                <h2 className="mr-auto text-lg font-medium">
+                    Dashboard
+                </h2>
+                <div className='flex'>
+                    <div className='px-5 py-5'>
+                        <label className="text-slate-500">Start Date</label>
+                        <input
+                            type="date"
+                            value={consumptionStartDate}
+                            onChange={(e) => {
+                                setConsumptionStartDate(e.target.value);
+                                setConsumptionCurrentPage(1);
+                            }}
+                            className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                        />
+                        <span className="text-slate-500">to</span>
+                        <label className="text-slate-500">End Date</label>
+                        <input
+                            type="date"
+                            value={consumptionEndDate}
+                            onChange={(e) => {
+                                setConsumptionEndDate(e.target.value);
+                                setConsumptionCurrentPage(1);
+                            }}
+                            className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
+                        />
+                    </div>
+                    <Link className="ml-auto flex items-center text-primary" to="/dashboard">
+                        <RefreshCw className="stroke-1.5 mr-3 h-4 w-4" />
+                        Summary for {currentDate}
+                    </Link>
+                </div>
+            </div>
             {/* Main Dashboard Content */}
             <div className="col-span-12 2xl:col-span-9">
                 <div className="grid grid-cols-12 gap-6">
                     {/* Summary Cards */}
                     <div className="col-span-12 mt-8">
-                        <div className="intro-y flex h-10 items-center">
-                            <h2 className="mr-5 truncate text-lg font-medium">Dashboard</h2>
-                            <Link className="ml-auto flex items-center text-primary" to="/dashboard">
-                                <RefreshCw className="stroke-1.5 mr-3 h-4 w-4" />
-                                Summary for {currentDate}
-                            </Link>
-                        </div>
                         <div className="mt-5 grid grid-cols-12 gap-6">
                             <div className="intro-y col-span-12 sm:col-span-6 xl:col-span-4">
                                 <div className="relative zoom-in before:box before:absolute before:inset-x-3 before:mt-3 before:h-full before:bg-slate-50">
@@ -318,33 +371,6 @@ const Dashboard = () => {
                                         </div>
                                         <div className="mt-1 text-base text-slate-500">Total Consumption Amount</div>
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Date Range Filter for Consumption */}
-                            <div className="col-span-12 mt-4">
-                                <div className="intro-y flex sm:flex-row sm:flex-wrap sm:items-center gap-2">
-                                    <label className="text-slate-500">Start Date</label>
-                                    <input
-                                        type="date"
-                                        value={consumptionStartDate}
-                                        onChange={(e) => {
-                                            setConsumptionStartDate(e.target.value);
-                                            setConsumptionCurrentPage(1);
-                                        }}
-                                        className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
-                                    />
-                                    <span className="text-slate-500">to</span>
-                                    <label className="text-slate-500">End Date</label>
-                                    <input
-                                        type="date"
-                                        value={consumptionEndDate}
-                                        onChange={(e) => {
-                                            setConsumptionEndDate(e.target.value);
-                                            setConsumptionCurrentPage(1);
-                                        }}
-                                        className="w-40 border-slate-200 shadow-sm rounded-md py-2 px-3 focus:ring-4 focus:ring-primary"
-                                    />
                                 </div>
                             </div>
                         </div>
