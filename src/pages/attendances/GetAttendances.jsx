@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import { fetchAttendances, fetchFoodMenus } from '../../api'
 import { useNavigate } from 'react-router-dom'
-import { toPng } from 'html-to-image'
 import { jsPDF } from 'jspdf'
 
 const GetAttendances = () => {
@@ -344,17 +343,6 @@ const GetAttendances = () => {
         return <div className="text-center py-10 text-red-500">{error}</div>
     }
 
-    if (filteredData.length === 0) {
-        return (
-            <div className="text-center py-10">
-                <h3 className="text-lg font-medium">No Attendance Found</h3>
-                <p className="mt-2 text-slate-500 dark:text-slate-400">
-                    Looks like no employees match your criteria.
-                </p>
-            </div>
-        )
-    }
-
     return (
         <>
             <div className="intro-y col-span-12 mt-8 flex flex-wrap items-center xl:flex-nowrap">
@@ -482,6 +470,18 @@ const GetAttendances = () => {
                         </select>
                     </div>
                 </div>
+
+                {/* No Attendance Found */}
+                {filteredData.length === 0 && (
+                    <div className="flex items-center">
+                        <div className="text-center py-10">
+                            <h3 className="text-lg font-medium">No Attendance Found</h3>
+                            <p className="mt-2 text-slate-500 dark:text-slate-400">
+                                Looks like no employees match your criteria.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible" ref={attendanceRef}>
                     <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
