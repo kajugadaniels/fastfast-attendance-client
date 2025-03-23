@@ -283,7 +283,6 @@ const GetAttendances = () => {
         doc.setFont('helvetica', 'normal')
         doc.text(`Report Date Range: ${startDate} to ${endDate}`, margin, y)
         y += 6
-        // Include additional filter details if applied:
         if (attendanceFilter) {
             doc.text(`Attendance Filter: ${attendanceFilter}`, margin, y)
             y += 6
@@ -471,18 +470,7 @@ const GetAttendances = () => {
                     </div>
                 </div>
 
-                {/* No Attendance Found */}
-                {filteredData.length === 0 && (
-                    <div className="flex items-center">
-                        <div className="text-center py-10">
-                            <h3 className="text-lg font-medium">No Attendance Found</h3>
-                            <p className="mt-2 text-slate-500 dark:text-slate-400">
-                                Looks like no employees match your criteria.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
+                {/* Attendance Table */}
                 <div className="intro-y col-span-12 overflow-auto 2xl:overflow-visible" ref={attendanceRef}>
                     <table className="w-full text-left -mt-2 border-separate border-spacing-y-[10px]">
                         <thead>
@@ -628,15 +616,15 @@ const GetAttendances = () => {
                 )}
             </div>
 
-            {/* Professional PDF Download Button */}
-            <div className="flex justify-end gap-4 mt-6">
-                <button
-                    onClick={downloadAttendancePDF}
-                    className="transition duration-200 border shadow-sm inline-flex items-center justify-center py-2 px-3 rounded-md font-medium cursor-pointer focus:ring-4 focus:ring-success focus:ring-opacity-20 bg-success border-success text-white"
-                >
-                    Download Attendance PDF
-                </button>
-            </div>
+            {/* No Attendance Found Section */}
+            {filteredData.length === 0 && (
+                <div className="text-center py-10">
+                    <h3 className="text-lg font-medium">No Attendance Found</h3>
+                    <p className="mt-2 text-slate-500 dark:text-slate-400">
+                        Looks like no employees match your criteria.
+                    </p>
+                </div>
+            )}
         </>
     )
 }
