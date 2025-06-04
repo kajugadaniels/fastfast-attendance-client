@@ -33,6 +33,8 @@ const EmployeeDetails = () => {
     // Ref for attendance history section (for PDF download)
     const attendanceRef = useRef();
 
+    const [filteredMenus, setFilteredMenus] = useState([]);
+
     useEffect(() => {
         const getEmployeeDetails = async () => {
             try {
@@ -51,6 +53,7 @@ const EmployeeDetails = () => {
             try {
                 const res = await fetchFoodMenus();
                 setFoodMenus(res.data);
+                setFilteredMenus(res.data); // Keep original set as fallback
             } catch (error) {
                 toast.error('Failed to load food menus.');
             }
@@ -365,11 +368,28 @@ const EmployeeDetails = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-60 backdrop-blur-sm">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-11/12 sm:w-1/3 p-4 sm:p-8 transform transition-all duration-300">
-                        <h3 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-gray-100">
+                        <h3 className="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-gray-100">
                             Select Food Menu
                         </h3>
-                        <ul className="space-y-4 max-h-60 overflow-y-auto">
-                            {foodMenus.map(menu => (
+            
+                        {/* Search Input */}
+                        <input
+                            type="text"
+                            placeholder="Search food menu..."
+                            onChange={(e) => {
+                                const val = e.target.value.toLowerCase();
+                                setFilteredMenus(
+                                    foodMenus.filter((menu) =>
+                                        menu.name.toLowerCase().includes(val)
+                                    )
+                                );
+                            }}
+                            className="w-full mb-4 p-2 border rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                        />
+            
+                        {/* Scrollable List with Max Height */}
+                        <ul className="space-y-4 overflow-y-auto max-h-[300px] pr-1" style={{ 'height': '300px' }}>
+                            {(filteredMenus.length > 0 ? filteredMenus : foodMenus).map((menu) => (
                                 <li
                                     key={menu.id}
                                     className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md border border-gray-200 dark:border-gray-700 transition-colors"
@@ -395,6 +415,8 @@ const EmployeeDetails = () => {
                                 </li>
                             ))}
                         </ul>
+            
+                        {/* Action Buttons */}
                         <div className="mt-8 flex flex-col sm:flex-row justify-end gap-4">
                             <button
                                 onClick={() => setIsModalOpen(false)}
@@ -412,6 +434,7 @@ const EmployeeDetails = () => {
                     </div>
                 </div>
             )}
+            
         </div>
     );
 };
